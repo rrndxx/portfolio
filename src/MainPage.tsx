@@ -308,9 +308,25 @@ function Navbar() {
                         boxShadow: `0 0 24px ${C.gold}18, inset 0 1px 0 ${C.gold}20`,
                         flexShrink: 0,
                     }}>RRC</div>
-                    <div>
-                        <div style={{ fontFamily: "var(--display)", fontWeight: 700, fontSize: 14, color: C.textMain, letterSpacing: "-0.01em", lineHeight: 1 }}>rendyll</div>
-                        <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, color: C.gold, letterSpacing: "0.22em", textTransform: "uppercase" }}>cabardo</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <span style={{
+                            fontFamily: "var(--display)",
+                            fontWeight: 700,
+                            fontSize: 14,
+                            color: C.textMain,
+                            letterSpacing: "-0.01em",
+                            lineHeight: 1
+                        }}>
+                            rendyll
+                        </span>
+                        <span style={{
+                            fontFamily: "var(--mono)",
+                            fontSize: 7.5,
+                            color: C.gold,
+                            letterSpacing: "0.22em"
+                        }}>
+                            .dev
+                        </span>
                     </div>
                 </a>
 
