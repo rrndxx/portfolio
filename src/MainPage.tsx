@@ -1,95 +1,110 @@
-import { useState, useEffect, useRef, type ReactNode, type CSSProperties } from "react";
+import {
+    useState, useEffect, useRef,
+    type ReactNode, type CSSProperties,
+    startTransition,
+} from "react";
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // TYPES
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 interface Theme {
-    bg: string; surface: string; surfaceAlt: string;
-    border: string; borderStrong: string;
-    text: string; textMuted: string; textFaint: string;
-    cream: string;
+    bg: string; bgAlt: string; bgCard: string;
+    border: string; borderHi: string;
+    text: string; textSub: string; textFaint: string;
 }
 
 interface Project {
     id: string; title: string; subtitle: string; description: string;
     tags: string[]; emoji: string; accent: string;
-    type: string; year: string; highlights: string[];
+    type: string; year: string; highlights: string[]; number: string;
 }
 
 interface Achievement {
     title: string; org: string; year: string;
-    icon: string; cat: keyof typeof CAT_ACCENTS;
+    icon: string; cat: keyof typeof CAT_ACC;
 }
 
-// ─────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// PALETTE  —  dark-first tech-noir + electric green
+// ─────────────────────────────────────────────────────────────────
 
-const C = {
-    forest: "#3D6B52",
-    forestDim: "#2F5240",
-    forestDeep: "#1E3528",
-    sage: "#7FA882",
-    sageLight: "#A8C5A0",
-    cream: "#E6F0DE",
-    creamDark: "#C8DEC0",
+const K = {
+    neon: "#1AFF6E",
+    neonDim: "#0DB84E",
+    neonDeep: "#07522A",
+    violet: "#A855F7",
+    amber: "#FFB830",
+    coral: "#FF5B5B",
+    cyan: "#22D3EE",
     // dark
-    dBg: "#0B100D",
-    dSurf: "#101810",
-    dSurfAlt: "#141E15",
-    dBorder: "#1E2E21",
-    dBorderSt: "#2A3E2C",
-    dText: "#D8ECD2",
-    dMuted: "#698C6E",
-    dFaint: "#3A5040",
-    dCream: "#162019",
+    dBg: "#080C0A",
+    dBgAlt: "#0D1410",
+    dBgCard: "#111A13",
+    dBorder: "#1C2B1E",
+    dBorderHi: "#2F4A32",
+    dText: "#E8F5E2",
+    dSub: "#6B9970",
+    dFaint: "#2D4430",
     // light
-    lBg: "#F2F6EF",
-    lSurf: "#FFFFFF",
-    lSurfAlt: "#EDF4E8",
-    lBorder: "#D0E2C8",
-    lBorderSt: "#B8D0AE",
-    lText: "#1A2820",
-    lMuted: "#527060",
-    lFaint: "#A8C5A0",
-    lCream: "#E6F0DE",
+    lBg: "#F5FAF3",
+    lBgAlt: "#ECF5E8",
+    lBgCard: "#FFFFFF",
+    lBorder: "#CDE3C5",
+    lBorderHi: "#9DC490",
+    lText: "#0F1F12",
+    lSub: "#4A7A52",
+    lFaint: "#CEEAD6",
 } as const;
 
-const CAT_ACCENTS = {
-    Leadership: "#3A9E6F",
-    Technical: "#7359B8",
-    Academic: "#A08020",
-    Competition: "#B84040",
+const CAT_ACC = {
+    Leadership: K.neon,
+    Technical: K.violet,
+    Academic: K.amber,
+    Competition: K.coral,
 } as const;
 
-const STACK_CATS = {
-    Frontend: C.forest,
-    Backend: "#7359B8",
-    Database: "#B84040",
-    DevOps: "#2E7FA8",
+const STACK_ACC = {
+    Frontend: K.neon,
+    Backend: K.violet,
+    Database: K.coral,
+    DevOps: K.cyan,
 } as const;
+
+const makeTheme = (dark: boolean): Theme => dark ? {
+    bg: K.dBg, bgAlt: K.dBgAlt, bgCard: K.dBgCard,
+    border: K.dBorder, borderHi: K.dBorderHi,
+    text: K.dText, textSub: K.dSub, textFaint: K.dFaint,
+} : {
+    bg: K.lBg, bgAlt: K.lBgAlt, bgCard: K.lBgCard,
+    border: K.lBorder, borderHi: K.lBorderHi,
+    text: K.lText, textSub: K.lSub, textFaint: K.lFaint,
+};
+
+// ─────────────────────────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────────────────────────
 
 const personal = {
     name: "Rendyll Ryan Cabardo",
     email: "rendyllcabardo11@gmail.com",
-    bio1: "I'm a 4th-year BSIT student at CRMC and a full-stack developer based in Bogo City, Cebu. I build scalable systems and polished interfaces — from centralized network monitoring tools to inventory platforms.",
-    bio2: "My edge is bridging complex backend architecture with clean, intuitive frontends. I care deeply about the details users feel but never consciously see.",
+    location: "Bogo City, Cebu · PH",
+    bio: "I build scalable systems and polished interfaces — from real-time network monitors to inventory platforms. My edge is bridging complex backend architecture with clean, intuitive frontends.",
     social: {
-        github: "https://github.com/rrndxx",
-        linkedin: "https://www.linkedin.com/in/rendyll/",
-        facebook: "https://www.facebook.com/rendyllryan.cabardo",
+        github: { label: "GitHub", href: "https://github.com/rrndxx" },
+        linkedin: { label: "LinkedIn", href: "https://www.linkedin.com/in/rendyll/" },
+        facebook: { label: "Facebook", href: "https://www.facebook.com/rendyllryan.cabardo" },
     },
 };
 
 const STATS = [
-    { num: "21", label: "Years old" },
-    { num: "2+", label: "Years coding" },
-    { num: "2", label: "Major projects" },
-    { num: "4th", label: "Year student" },
+    { num: "21", label: "Years old", sub: "Apr 16, 2004" },
+    { num: "2+", label: "Years exp", sub: "Full-stack" },
+    { num: "2", label: "Projects", sub: "Shipped" },
+    { num: "4th", label: "Year", sub: "BSIT · CRMC" },
 ];
 
-const TECH: { name: string; cat: keyof typeof STACK_CATS }[] = [
+const TECH: { name: string; cat: keyof typeof STACK_ACC }[] = [
     { name: "HTML", cat: "Frontend" }, { name: "CSS", cat: "Frontend" },
     { name: "JavaScript", cat: "Frontend" }, { name: "TypeScript", cat: "Frontend" },
     { name: "React", cat: "Frontend" }, { name: "Next.js", cat: "Frontend" },
@@ -106,133 +121,145 @@ const TECH: { name: string; cat: keyof typeof STACK_CATS }[] = [
 
 const PROJECTS: Project[] = [
     {
-        id: "netdetect", title: "NetDetect", subtitle: "Network Monitoring System",
-        description: "A centralized network monitoring system for CRMC that tackles unauthorized device access, bandwidth usage tracking, and remote admin control. Built to strengthen campus network security and operational efficiency.",
-        tags: ["React", "TypeScript", "FastAPI", "Docker", "Redis", "PostgreSQL", "Node", "Express", "Tailwind", "Shadcn"],
-        emoji: "🛡️", accent: "#3A9E6F", type: "Capstone Project", year: "2025–2026",
-        highlights: ["Real-time device monitoring", "Bandwidth usage analytics", "Remote admin controls", "Unauthorized access detection"],
+        id: "netdetect", number: "01",
+        title: "NetDetect", subtitle: "Network Monitoring System",
+        description: "Centralized network monitoring for CRMC — tackling unauthorized device access, bandwidth tracking, and remote admin control. Strengthens campus security and operational efficiency.",
+        tags: ["React", "TypeScript", "FastAPI", "Docker", "Redis", "PostgreSQL", "Express", "Tailwind"],
+        emoji: "🛡️", accent: K.neon, type: "Capstone", year: "2025–26",
+        highlights: ["Real-time device monitoring", "Bandwidth analytics", "Remote admin panel", "Intrusion detection"],
     },
     {
-        id: "everyshelf", title: "Everyshelf", subtitle: "Inventory Management System",
-        description: "End-to-end inventory platform for tracking stock batches, dispatching items to customers, monitoring sales performance, and managing raw material supply chains from suppliers.",
+        id: "everyshelf", number: "02",
+        title: "Everyshelf", subtitle: "Inventory Management System",
+        description: "End-to-end inventory platform — tracking stock batches, dispatching to customers, monitoring sales, and managing raw material supply from suppliers.",
         tags: ["Next.js", "Supabase", "TanStack Query", "Tailwind", "Shadcn"],
-        emoji: "📦", accent: "#7359B8", type: "Systems Dev Project", year: "2024–2025",
-        highlights: ["Stock batch dispatching", "Sales tracking dashboard", "Supplier material tracking", "Real-time inventory sync"],
+        emoji: "📦", accent: K.violet, type: "Systems Dev", year: "2024–25",
+        highlights: ["Batch dispatching", "Sales dashboard", "Supplier tracking", "Live inventory sync"],
     },
 ];
 
 const ACHIEVEMENTS: Achievement[] = [
-    { title: "CCSO 2nd Year Representative", org: "Cebu Roosevelt Memorial Colleges", year: "2023–2024", icon: "🎓", cat: "Leadership" },
-    { title: "CCSO Vice-President Academics", org: "Cebu Roosevelt Memorial Colleges", year: "2024–2025", icon: "🏛️", cat: "Leadership" },
-    { title: "CCSO 4th Year Representative", org: "Cebu Roosevelt Memorial Colleges", year: "2025–2026", icon: "🎓", cat: "Leadership" },
-    { title: "Full-Stack Developer — SAD", org: "Systems Analysis & Design", year: "2024–2025", icon: "💻", cat: "Technical" },
-    { title: "Full-Stack Developer — Capstone", org: "BSIT Capstone Project", year: "2025–2026", icon: "🚀", cat: "Technical" },
-    { title: "Dean's Lister", org: "Cebu Roosevelt Memorial Colleges", year: "2023–2026", icon: "⭐", cat: "Academic" },
-    { title: "CESAFI Computer Quiz Bowl — 5th Place", org: "CESAFI Inter-School Competition", year: "2024–2025", icon: "🏆", cat: "Competition" },
-    { title: "National ISITE Quiz Bowl — 5th Place", org: "National ISITE Competition", year: "2024–2025", icon: "🏆", cat: "Competition" },
+    { title: "CCSO 2nd Year Representative", org: "CRMC", year: "2023–24", icon: "🎓", cat: "Leadership" },
+    { title: "CCSO VP Academics", org: "CRMC", year: "2024–25", icon: "🏛️", cat: "Leadership" },
+    { title: "CCSO 4th Year Representative", org: "CRMC", year: "2025–26", icon: "🎓", cat: "Leadership" },
+    { title: "Full-Stack Dev — SAD", org: "CRMC", year: "2024–25", icon: "💻", cat: "Technical" },
+    { title: "Full-Stack Dev — Capstone", org: "CRMC", year: "2025–26", icon: "🚀", cat: "Technical" },
+    { title: "Dean's Lister", org: "CRMC", year: "2023–26", icon: "⭐", cat: "Academic" },
+    { title: "CESAFI Quiz Bowl — 5th", org: "CESAFI", year: "2024–25", icon: "🏆", cat: "Competition" },
+    { title: "ISITE Quiz Bowl — 5th", org: "ISITE", year: "2024–25", icon: "🏆", cat: "Competition" },
 ];
 
-const NAV_LINKS = ["Home", "Projects", "About", "Achievements", "Contact"];
+const NAV = ["Home", "Projects", "About", "Achievements", "Contact"];
 
-const MARQUEE = [
-    "React ✦", "TypeScript ✦", "Next.js ✦", "FastAPI ✦",
-    "PostgreSQL ✦", "Docker ✦", "Supabase ✦", "TanStack Query ✦",
-    "Node.js ✦", "Tailwind CSS ✦", "Redis ✦", "ShadcnUI ✦",
+const MARQUEE_ITEMS = [
+    "React", "TypeScript", "Next.js", "FastAPI", "PostgreSQL",
+    "Docker", "Supabase", "TanStack Query", "Node.js", "Tailwind",
+    "Redis", "ShadcnUI", "Python", "Express", "MySQL",
 ];
 
-// ─────────────────────────────────────────────
-// THEME
-// ─────────────────────────────────────────────
-
-const makeTheme = (dark: boolean): Theme => dark
-    ? {
-        bg: C.dBg, surface: C.dSurf, surfaceAlt: C.dSurfAlt,
-        border: C.dBorder, borderStrong: C.dBorderSt,
-        text: C.dText, textMuted: C.dMuted, textFaint: C.dFaint, cream: C.dCream
-    }
-    : {
-        bg: C.lBg, surface: C.lSurf, surfaceAlt: C.lSurfAlt,
-        border: C.lBorder, borderStrong: C.lBorderSt,
-        text: C.lText, textMuted: C.lMuted, textFaint: C.lFaint, cream: C.lCream
-    };
-
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // HOOKS
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
-function useInView(threshold = 0.12): [React.RefObject<HTMLDivElement | null>, boolean] {
+function useInView(): [React.RefObject<HTMLDivElement | null>, boolean] {
     const ref = useRef<HTMLDivElement>(null);
     const [vis, setVis] = useState(false);
     useEffect(() => {
         const obs = new IntersectionObserver(
             ([e]) => { if (e.isIntersecting) setVis(true); },
-            { threshold }
+            { threshold: 0.07 }
         );
         if (ref.current) obs.observe(ref.current);
         return () => obs.disconnect();
-    }, [threshold]);
+    }, []);
     return [ref, vis];
 }
 
-// ─────────────────────────────────────────────
-// PRIMITIVES
-// ─────────────────────────────────────────────
-
-interface FadeProps {
-    children: ReactNode; delay?: number; y?: number;
-    className?: string; style?: CSSProperties;
+function useMouse() {
+    const [pos, setPos] = useState({ x: -999, y: -999 });
+    useEffect(() => {
+        const fn = (e: MouseEvent) => setPos({ x: e.clientX, y: e.clientY });
+        window.addEventListener("mousemove", fn, { passive: true });
+        return () => window.removeEventListener("mousemove", fn);
+    }, []);
+    return pos;
 }
-function Fade({ children, delay = 0, y = 22, className, style: s }: FadeProps) {
+
+function useTypewriter(words: string[], pause = 1800) {
+    const [idx, setIdx] = useState(0);
+    const [sub, setSub] = useState(0);
+    const [del, setDel] = useState(false);
+    useEffect(() => {
+        const word = words[idx];
+        if (!del && sub === word.length) {
+            const t = setTimeout(() => setDel(true), pause);
+            return () => clearTimeout(t);
+        }
+        if (del && sub === 0) {
+            startTransition(() => {
+                setDel(false); setIdx(i => (i + 1) % words.length);
+                return;
+            })
+        }
+        const t = setTimeout(() => setSub(s => del ? s - 1 : s + 1), del ? 42 : 85);
+        return () => clearTimeout(t);
+    }, [sub, del, idx, words, pause]);
+    return words[idx].slice(0, sub);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PRIMITIVES
+// ─────────────────────────────────────────────────────────────────
+
+interface RevealProps { children: ReactNode; delay?: number; y?: number; x?: number; className?: string; style?: CSSProperties; }
+function Reveal({ children, delay = 0, y = 28, x = 0, className, style: s }: RevealProps) {
     const [ref, vis] = useInView();
     return (
         <div ref={ref} className={className} style={{
             opacity: vis ? 1 : 0,
-            transform: vis ? "none" : `translateY(${y}px)`,
-            transition: `opacity .65s ease ${delay}s, transform .65s ease ${delay}s`,
+            transform: vis ? "none" : `translate(${x}px,${y}px)`,
+            transition: `opacity .72s cubic-bezier(.22,1,.36,1) ${delay}s, transform .72s cubic-bezier(.22,1,.36,1) ${delay}s`,
             ...s,
         }}>{children}</div>
     );
 }
 
-function Label({ children, light }: { children: ReactNode; light?: boolean }) {
-    return (
-        <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 10,
-            fontSize: 10, fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase",
-            color: light ? C.sageLight : C.sage, fontFamily: "var(--mono)",
-        }}>
-            <span style={{ width: 18, height: 1.5, background: "currentColor", display: "block", borderRadius: 1 }} />
-            {children}
-        </div>
-    );
-}
-
-function Tag({ children, accent }: { children: ReactNode; accent?: string }) {
+function Chip({ children, accent, dark: d }: { children: ReactNode; accent?: string; dark?: boolean }) {
+    const a = accent ?? K.neon;
     return (
         <span style={{
-            display: "inline-block",
-            fontSize: 9, fontWeight: 700, padding: "3px 9px", borderRadius: 4,
-            letterSpacing: "0.07em", textTransform: "uppercase", fontFamily: "var(--mono)",
-            background: accent ? `${accent}18` : `${C.forest}18`,
-            color: accent ?? C.forest,
-            border: `1px solid ${accent ? `${accent}35` : `${C.forest}30`}`,
+            display: "inline-block", fontSize: 9, fontWeight: 700,
+            padding: "3px 9px", borderRadius: 99,
+            letterSpacing: "0.07em", textTransform: "uppercase",
+            fontFamily: "var(--mono)",
+            background: d ? `${a}14` : `${a}20`,
+            color: a, border: `1px solid ${a}30`,
         }}>{children}</span>
     );
 }
 
-// Consistent section wrapper
-const W = 1020; // max content width
-function Wrap({ children, style: s }: { children: ReactNode; style?: CSSProperties }) {
+// ─────────────────────────────────────────────────────────────────
+// CURSOR GLOW  (dark mode only)
+// ─────────────────────────────────────────────────────────────────
+
+function CursorGlow({ dark }: { dark: boolean }) {
+    const { x, y } = useMouse();
+    if (!dark) return null;
     return (
-        <div style={{ maxWidth: W, margin: "0 auto", padding: "0 clamp(1.25rem,5vw,2.5rem)", ...s }}>
-            {children}
-        </div>
+        <div style={{
+            position: "fixed", top: 0, left: 0, pointerEvents: "none", zIndex: 999,
+            width: 500, height: 500, borderRadius: "50%",
+            background: `radial-gradient(circle, ${K.neon}07 0%, transparent 68%)`,
+            transform: `translate(${x - 250}px, ${y - 250}px)`,
+            transition: "transform .08s linear",
+            willChange: "transform",
+        }} />
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // NAVBAR
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 function Navbar({ dark, setDark, theme }: { dark: boolean; setDark: (v: boolean) => void; theme: Theme }) {
     const [menu, setMenu] = useState(false);
@@ -240,91 +267,94 @@ function Navbar({ dark, setDark, theme }: { dark: boolean; setDark: (v: boolean)
     const [scrolled, setScrolled] = useState(false);
 
     useEffect(() => {
-        const fn = () => setScrolled(window.scrollY > 20);
+        const fn = () => setScrolled(window.scrollY > 30);
         window.addEventListener("scroll", fn, { passive: true });
         return () => window.removeEventListener("scroll", fn);
     }, []);
 
+    const navBg = scrolled
+        ? (dark ? "rgba(8,12,10,.97)" : "rgba(245,250,243,.97)")
+        : "transparent";
+
     return (
         <nav style={{
-            position: "sticky", top: 0, zIndex: 100,
-            background: dark
-                ? `rgba(11,16,13,${scrolled ? "0.97" : "0.88"})`
-                : `rgba(242,246,239,${scrolled ? "0.97" : "0.88"})`,
-            backdropFilter: "blur(20px) saturate(1.4)",
-            borderBottom: `1px solid ${scrolled ? theme.borderStrong : theme.border}`,
-            transition: "background .3s, border-color .3s",
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+            background: navBg,
+            backdropFilter: scrolled ? "blur(24px) saturate(1.6)" : "none",
+            borderBottom: scrolled ? `1px solid ${theme.border}` : "1px solid transparent",
+            transition: "all .3s ease",
         }}>
-            <Wrap>
-                <div style={{
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    height: 58,
-                }}>
-                    {/* Logo */}
-                    <a href="#home" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9 }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem,4vw,2.5rem)", display: "flex", alignItems: "center", justifyContent: "space-between", height: 62 }}>
+
+                <a href="#home" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                        width: 34, height: 34, borderRadius: 8,
+                        background: `linear-gradient(135deg, ${K.neonDim}, ${K.neon})`,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 800,
+                        color: K.dBg, letterSpacing: "0.03em", flexShrink: 0,
+                        boxShadow: dark ? `0 0 16px ${K.neon}30` : "none",
+                    }}>RRC</div>
+                    <span style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: 14, color: theme.text, letterSpacing: "-0.01em" }}>
+                        rendyll<span style={{ color: K.neon }}>.dev</span>
+                    </span>
+                </a>
+
+                <div className="d-nav" style={{ display: "flex", gap: 2 }}>
+                    {NAV.map(l => (
+                        <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setActive(l)} style={{
+                            textDecoration: "none", fontSize: 12.5, fontWeight: 600,
+                            padding: "6px 13px", borderRadius: 7, fontFamily: "var(--sans)",
+                            color: active === l ? K.neon : theme.textSub,
+                            background: active === l ? `${K.neon}12` : "transparent",
+                            transition: "all .18s",
+                        }}>{l}</a>
+                    ))}
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                    <button onClick={() => setDark(!dark)} aria-label="Toggle theme" style={{
+                        width: 38, height: 21, borderRadius: 11,
+                        background: dark ? K.neonDim : theme.border,
+                        border: "none", cursor: "pointer", position: "relative", transition: "background .3s",
+                    }}>
                         <div style={{
-                            width: 33, height: 33, background: C.forest, borderRadius: 8,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 700, color: C.cream,
-                            letterSpacing: "0.04em", flexShrink: 0,
-                        }}>RRC</div>
-                        <span style={{ fontWeight: 700, fontSize: 14, color: theme.text, letterSpacing: "-0.01em", fontFamily: "var(--sans)" }}>
-                            Rendyll<span style={{ color: C.forest }}>.dev</span>
-                        </span>
+                            width: 15, height: 15, borderRadius: "50%",
+                            background: dark ? K.dBg : "#fff",
+                            position: "absolute", top: 3, left: dark ? 19 : 3, transition: "left .28s",
+                        }} />
+                    </button>
+
+                    <a href="#contact" style={{
+                        textDecoration: "none", fontFamily: "var(--sans)", fontSize: 12,
+                        fontWeight: 700, padding: "7px 16px", borderRadius: 7,
+                        background: dark ? `${K.neon}16` : K.neon,
+                        color: dark ? K.neon : K.dBg,
+                        border: `1.5px solid ${K.neon}55`,
+                        letterSpacing: "0.02em", whiteSpace: "nowrap",
+                        boxShadow: dark ? `0 0 18px ${K.neon}20` : "none",
+                        transition: "all .18s",
+                    }}
+                        onMouseEnter={e => { e.currentTarget.style.background = K.neon; e.currentTarget.style.color = K.dBg; e.currentTarget.style.boxShadow = `0 0 28px ${K.neon}50`; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = dark ? `${K.neon}16` : K.neon; e.currentTarget.style.color = dark ? K.neon : K.dBg; e.currentTarget.style.boxShadow = dark ? `0 0 18px ${K.neon}20` : "none"; }}>
+                        Hire Me
                     </a>
 
-                    {/* Desktop links */}
-                    <div className="d-nav" style={{ display: "flex", gap: 1, alignItems: "center" }}>
-                        {NAV_LINKS.map(l => (
-                            <a key={l} href={`#${l.toLowerCase()}`} onClick={() => setActive(l)} style={{
-                                textDecoration: "none", fontSize: 12.5, fontWeight: 600,
-                                padding: "6px 12px", borderRadius: 6, fontFamily: "var(--sans)",
-                                color: active === l ? C.forest : theme.textMuted,
-                                background: active === l ? (dark ? `${C.forest}22` : C.cream) : "transparent",
-                                transition: "all .18s",
-                            }}>{l}</a>
-                        ))}
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {/* Dark toggle */}
-                        <button onClick={() => setDark(!dark)} aria-label="Toggle theme" style={{
-                            width: 38, height: 21, borderRadius: 11,
-                            background: dark ? C.forest : theme.borderStrong,
-                            border: "none", cursor: "pointer", position: "relative",
-                            transition: "background .3s", flexShrink: 0,
-                        }}>
-                            <div style={{
-                                width: 15, height: 15, borderRadius: "50%", background: "#fff",
-                                position: "absolute", top: 3, left: dark ? 19 : 3, transition: "left .3s",
-                            }} />
-                        </button>
-
-                        <a href="#contact" style={{
-                            textDecoration: "none", fontSize: 12, fontWeight: 700,
-                            padding: "7px 15px", borderRadius: 7,
-                            background: C.forest, color: C.cream,
-                            fontFamily: "var(--sans)", letterSpacing: "0.02em", whiteSpace: "nowrap",
-                        }}>Hire Me</a>
-
-                        <button className="mob-btn" onClick={() => setMenu(m => !m)} style={{
-                            display: "none", background: "none", border: "none",
-                            cursor: "pointer", color: theme.text, fontSize: 18, padding: 4, flexShrink: 0,
-                        }}>{menu ? "✕" : "☰"}</button>
-                    </div>
+                    <button className="mob-btn" onClick={() => setMenu(m => !m)} style={{
+                        display: "none", background: "none", border: "none",
+                        cursor: "pointer", color: theme.text, fontSize: 19, padding: 3,
+                    }}>{menu ? "✕" : "☰"}</button>
                 </div>
-            </Wrap>
+            </div>
 
             {menu && (
-                <div style={{ borderTop: `1px solid ${theme.border}`, padding: "6px 0 10px" }}>
-                    {NAV_LINKS.map(l => (
-                        <a key={l} href={`#${l.toLowerCase()}`}
-                            onClick={() => { setActive(l); setMenu(false); }} style={{
-                                display: "block", textDecoration: "none",
-                                fontSize: 14.5, fontWeight: 600, fontFamily: "var(--sans)",
-                                padding: "10px clamp(1.25rem,5vw,2.5rem)",
-                                color: active === l ? C.forest : theme.textMuted,
-                            }}>{l}</a>
+                <div style={{ background: dark ? "rgba(8,12,10,.98)" : "rgba(245,250,243,.98)", backdropFilter: "blur(20px)", borderTop: `1px solid ${theme.border}`, padding: "8px 0 14px" }}>
+                    {NAV.map(l => (
+                        <a key={l} href={`#${l.toLowerCase()}`} onClick={() => { setActive(l); setMenu(false); }} style={{
+                            display: "block", textDecoration: "none", fontFamily: "var(--sans)",
+                            fontSize: 15, fontWeight: 600, padding: "11px clamp(1rem,4vw,2.5rem)",
+                            color: active === l ? K.neon : theme.textSub,
+                        }}>{l}</a>
                     ))}
                 </div>
             )}
@@ -332,569 +362,689 @@ function Navbar({ dark, setDark, theme }: { dark: boolean; setDark: (v: boolean)
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // HERO
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
-function Hero({ dark, theme }: { dark: boolean; theme: Theme }) {
+function TypewriterRole() {
+    const roles = ["Full-Stack Developer", "React Engineer", "FastAPI Builder", "UI/UX Craftsman", "4th Year BSIT"];
+    const word = useTypewriter(roles);
     return (
-        <div id="home" style={{ padding: "clamp(3.5rem,9vw,6.5rem) 0 clamp(2.5rem,7vw,5rem)" }}>
-            <Wrap>
-                <div className="hero-grid" style={{
-                    display: "grid", gridTemplateColumns: "1fr auto",
-                    gap: "clamp(2rem,5vw,3.5rem)", alignItems: "center",
-                }}>
-                    {/* Left */}
-                    <div style={{ minWidth: 0 }}>
-                        <Fade delay={0}>
-                            <div style={{
-                                display: "inline-flex", alignItems: "center", gap: 7,
-                                background: dark ? `${C.forest}22` : C.cream,
-                                border: `1px solid ${C.forest}40`, borderRadius: 99,
-                                padding: "5px 14px 5px 10px", marginBottom: 24,
-                                fontSize: 10.5, fontWeight: 700, color: C.forest,
-                                letterSpacing: "0.08em", textTransform: "uppercase",
-                                fontFamily: "var(--mono)",
-                            }}>
-                                <span style={{
-                                    width: 7, height: 7, borderRadius: "50%", background: C.sage,
-                                    display: "inline-block", animation: "blink 2.4s ease infinite",
-                                    flexShrink: 0,
-                                }} />
-                                Available for projects & roles
-                            </div>
-                        </Fade>
-
-                        <Fade delay={0.08}>
-                            <h1 style={{
-                                fontFamily: "var(--display)",
-                                fontSize: "clamp(2.6rem, 6.5vw, 5rem)",
-                                fontWeight: 800, lineHeight: 1.0,
-                                letterSpacing: "-0.04em", margin: "0 0 18px", color: theme.text,
-                            }}>
-                                Hey, I'm<br />
-                                <span style={{ color: C.forest, position: "relative", display: "inline-block" }}>
-                                    Rendyll.
-                                    <svg style={{ position: "absolute", bottom: -4, left: 0, width: "100%", height: 7 }} viewBox="0 0 200 7" preserveAspectRatio="none">
-                                        <path d="M0 5 Q50 2 100 5 Q150 8 200 5" stroke={C.sage} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-                                    </svg>
-                                </span>
-                            </h1>
-                        </Fade>
-
-                        <Fade delay={0.15}>
-                            <p style={{
-                                fontFamily: "var(--sans)", fontSize: "clamp(.9rem, 1.7vw, 1.05rem)",
-                                lineHeight: 1.78, color: theme.textMuted,
-                                maxWidth: 460, margin: "0 0 28px", fontWeight: 400,
-                            }}>
-                                Full-stack developer & 4th-year BSIT student at{" "}
-                                <strong style={{ color: theme.text, fontWeight: 600 }}>CRMC</strong>.
-                                I build performant systems and polished interfaces — from real-time network monitors to inventory platforms.
-                            </p>
-                        </Fade>
-
-                        <Fade delay={0.2}>
-                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 40 }}>
-                                <a href="#projects" style={{
-                                    textDecoration: "none", fontWeight: 700, fontSize: 13,
-                                    padding: "10px 22px", borderRadius: 8, fontFamily: "var(--sans)",
-                                    background: C.forest, color: C.cream, letterSpacing: "0.01em",
-                                    transition: "transform .2s, box-shadow .2s",
-                                }}
-                                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 8px 24px ${C.forest}44`; }}
-                                    onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = ""; }}>
-                                    View Projects →
-                                </a>
-                                <a href="#contact" style={{
-                                    textDecoration: "none", fontWeight: 700, fontSize: 13,
-                                    padding: "9px 20px", borderRadius: 8, fontFamily: "var(--sans)",
-                                    border: `1.5px solid ${theme.borderStrong}`, color: theme.text,
-                                    transition: "border-color .2s, color .2s",
-                                }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = C.forest; e.currentTarget.style.color = C.forest; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = theme.borderStrong; e.currentTarget.style.color = theme.text; }}>
-                                    Get In Touch
-                                </a>
-                            </div>
-                        </Fade>
-
-                        <Fade delay={0.27}>
-                            <div style={{ display: "flex", gap: "clamp(18px,4vw,32px)", flexWrap: "wrap" }}>
-                                {STATS.map(({ num, label }) => (
-                                    <div key={label} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                                        <span style={{
-                                            fontFamily: "var(--display)", fontSize: "clamp(1.5rem, 2.8vw, 1.9rem)",
-                                            fontWeight: 800, color: C.forest, letterSpacing: "-0.04em", lineHeight: 1,
-                                        }}>{num}</span>
-                                        <span style={{
-                                            fontFamily: "var(--mono)", fontSize: 8.5, color: theme.textMuted,
-                                            fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em",
-                                        }}>{label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </Fade>
-                    </div>
-
-                    {/* Hero card */}
-                    <Fade delay={0.18} className="hero-card-wrap" style={{ flexShrink: 0 }}>
-                        <div style={{ position: "relative", width: 248, height: 316 }}>
-                            <div style={{
-                                width: 212, height: 276, position: "absolute", top: 0, left: 18,
-                                background: dark ? "#12201A" : C.cream,
-                                border: `1.5px solid ${theme.borderStrong}`, borderRadius: 18, overflow: "hidden",
-                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                            }}>
-                                <div style={{
-                                    position: "absolute", inset: 0,
-                                    backgroundImage: `linear-gradient(${theme.border} 1px, transparent 1px), linear-gradient(90deg, ${theme.border} 1px, transparent 1px)`,
-                                    backgroundSize: "22px 22px", opacity: 0.55,
-                                }} />
-                                <div style={{ position: "absolute", top: -32, right: -32, width: 110, height: 110, borderRadius: "50%", background: `${C.forest}15`, border: `1.5px solid ${C.forest}20` }} />
-                                <div style={{ position: "relative", textAlign: "center", padding: "0 22px" }}>
-                                    <div style={{ fontSize: 50, marginBottom: 12, lineHeight: 1 }}>👨‍💻</div>
-                                    <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 13, color: theme.text, letterSpacing: "-0.01em" }}>Design × Code</div>
-                                    <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: theme.textMuted, marginTop: 5, fontWeight: 600 }}>Bogo City, Cebu 🇵🇭</div>
-                                </div>
-                                <div style={{ display: "flex", gap: 5, position: "absolute", bottom: 16 }}>
-                                    {["React", "FastAPI", "Next.js"].map(t => (
-                                        <span key={t} style={{
-                                            fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700,
-                                            padding: "3px 7px", borderRadius: 4,
-                                            background: dark ? `${C.forest}28` : `${C.forest}18`, color: C.forest,
-                                        }}>{t}</span>
-                                    ))}
-                                </div>
-                            </div>
-                            {/* Accent badge */}
-                            <div style={{
-                                position: "absolute", bottom: 0, right: 0, width: 110, height: 64,
-                                background: C.forest, borderRadius: 13,
-                                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3,
-                            }}>
-                                <div style={{ fontSize: 14 }}>⚡</div>
-                                <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 800, color: C.cream, letterSpacing: "0.08em" }}>4TH YEAR BSIT</div>
-                                <div style={{ fontFamily: "var(--mono)", fontSize: 7, color: `${C.cream}80`, fontWeight: 600 }}>CRMC · CEBU, PH</div>
-                            </div>
-                        </div>
-                    </Fade>
-                </div>
-            </Wrap>
-        </div>
+        <span style={{ color: K.neon }}>
+            {word}<span style={{ animation: "blink-cursor .7s step-end infinite", marginLeft: 1 }}>|</span>
+        </span>
     );
 }
 
-// ─────────────────────────────────────────────
-// MARQUEE
-// ─────────────────────────────────────────────
-
-function Marquee() {
-    const items = [...MARQUEE, ...MARQUEE, ...MARQUEE, ...MARQUEE];
+function PhotoCard({ dark, theme }: { dark: boolean; theme: Theme }) {
     return (
-        <div style={{ background: C.forest, padding: "11px 0", overflow: "hidden", borderTop: `1px solid ${C.sage}35`, borderBottom: `1px solid ${C.sage}35` }}>
+        <div style={{ position: "relative", width: 272, height: 372, flexShrink: 0 }}>
+            {dark && (
+                <div style={{ position: "absolute", inset: -24, borderRadius: 36, background: `radial-gradient(ellipse, ${K.neon}15 0%, transparent 62%)`, filter: "blur(20px)", zIndex: 0 }} />
+            )}
             <div style={{
-                display: "flex", gap: 48, animation: "marquee 26s linear infinite",
-                width: "max-content", fontFamily: "var(--mono)",
-                fontSize: 9, fontWeight: 700, color: C.cream,
-                letterSpacing: "0.18em", textTransform: "uppercase",
+                position: "relative", zIndex: 1, width: "100%", height: "100%",
+                borderRadius: 22,
+                border: `1.5px solid ${dark ? K.neon + "30" : theme.borderHi}`,
+                background: dark ? `linear-gradient(160deg, #0D1F14, #0A1810)` : `linear-gradient(160deg, #E8F5E0, #D4EBCA)`,
+                overflow: "hidden",
+                boxShadow: dark ? `0 24px 80px ${K.neon}12, 0 0 0 1px ${K.neon}15` : `0 24px 60px rgba(0,0,0,.09)`,
             }}>
-                {items.map((item, i) => <span key={i}>{item}</span>)}
+                {/* Grid overlay */}
+                <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(${theme.border} 1px, transparent 1px), linear-gradient(90deg, ${theme.border} 1px, transparent 1px)`, backgroundSize: "28px 28px", opacity: 0.3 }} />
+
+                {/* Avatar */}
+                <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, paddingBottom: 64 }}>
+                    <img src="/src/assets/corporate.png" alt="Rendyll" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0, borderRadius: 22 }} />
+                    {/* ↑ Replace with: <img src="/your-photo.jpg" alt="Rendyll" style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,borderRadius:22}} /> */}
+                    <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 15.5, color: theme.text, letterSpacing: "-0.02em" }}>Rendyll Ryan</div>
+                    <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: K.neon, marginTop: 5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Full-Stack Dev</div>
+                </div>
+
+                {/* Bottom bar */}
+                <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0,
+                    background: dark ? "rgba(8,12,10,.88)" : "rgba(245,250,243,.88)",
+                    backdropFilter: "blur(12px)",
+                    borderTop: `1px solid ${theme.border}`,
+                    padding: "10px 15px",
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                }}>
+                    <div>
+                        <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: K.neon, letterSpacing: "0.1em", textTransform: "uppercase" }}>Status</div>
+                        <div style={{ fontFamily: "var(--sans)", fontSize: 11, fontWeight: 600, color: theme.text, marginTop: 1 }}>Open to Work 🟢</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                        <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: theme.textSub, letterSpacing: "0.08em", textTransform: "uppercase" }}>Location</div>
+                        <div style={{ fontFamily: "var(--sans)", fontSize: 11, fontWeight: 600, color: theme.text, marginTop: 1 }}>Cebu, PH 🇵🇭</div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Floating badge — top right */}
+            <div style={{
+                position: "absolute", top: -12, right: -14, zIndex: 2,
+                background: dark ? K.dBgCard : "#fff",
+                border: `1.5px solid ${dark ? K.neon + "35" : theme.borderHi}`,
+                borderRadius: 10, padding: "7px 12px",
+                boxShadow: dark ? `0 0 20px ${K.neon}18, 0 8px 24px rgba(0,0,0,.5)` : `0 8px 22px rgba(0,0,0,.1)`,
+            }}>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700, color: K.neon, letterSpacing: "0.1em", textTransform: "uppercase" }}>BSIT</div>
+                <div style={{ fontFamily: "var(--display)", fontSize: 13, fontWeight: 800, color: theme.text, marginTop: 1 }}>4th Year</div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 7, color: theme.textSub, marginTop: 1 }}>CRMC</div>
+            </div>
+
+            {/* Floating badge — bottom left */}
+            <div style={{
+                position: "absolute", bottom: 72, left: -16, zIndex: 2,
+                background: dark ? K.dBgCard : "#fff",
+                border: `1.5px solid ${K.neon}38`,
+                borderRadius: 10, padding: "7px 12px",
+                boxShadow: dark ? `0 0 16px ${K.neon}18, 0 8px 24px rgba(0,0,0,.5)` : `0 8px 22px rgba(0,0,0,.1)`,
+            }}>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700, color: K.neon, letterSpacing: "0.1em", textTransform: "uppercase" }}>Dean's Lister</div>
+                <div style={{ fontFamily: "var(--display)", fontSize: 12, fontWeight: 800, color: theme.text, marginTop: 1 }}>2023–2026 ⭐</div>
             </div>
         </div>
     );
 }
 
-// ─────────────────────────────────────────────
-// PROJECTS
-// ─────────────────────────────────────────────
-
-function Projects({ theme }: { theme: Theme }) {
+function Hero({ dark, theme }: { dark: boolean; theme: Theme }) {
     return (
-        <div id="projects" style={{ padding: "clamp(3rem,7vw,5.5rem) 0" }}>
-            <Wrap>
-                <Fade>
-                    <Label>Selected Work</Label>
-                    <h2 style={{
-                        fontFamily: "var(--display)",
-                        fontSize: "clamp(1.8rem, 3.8vw, 2.8rem)", fontWeight: 800,
-                        letterSpacing: "-0.04em", margin: "0 0 clamp(1.75rem,4vw,3rem)", color: theme.text,
-                    }}>Projects</h2>
-                </Fade>
+        <div id="home" style={{ position: "relative", overflow: "hidden", paddingTop: 62, minHeight: "100vh", display: "flex", alignItems: "center" }}>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "clamp(1rem,2.5vw,1.5rem)" }}>
-                    {PROJECTS.map((p, i) => <ProjectCard key={p.id} p={p} i={i} theme={theme} />)}
+            {/* BG effects */}
+            {dark && (
+                <>
+                    <div style={{ position: "absolute", top: "-15%", left: "50%", transform: "translateX(-50%)", width: 900, height: 600, background: `radial-gradient(ellipse, ${K.neon}09 0%, transparent 65%)`, pointerEvents: "none", zIndex: 0 }} />
+                    <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(${K.neon}05 1px, transparent 1px), linear-gradient(90deg, ${K.neon}05 1px, transparent 1px)`, backgroundSize: "60px 60px", zIndex: 0 }} />
+                    <div style={{ position: "absolute", inset: 0, background: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${K.neon}025 2px, ${K.neon}025 4px)`, pointerEvents: "none", zIndex: 0 }} />
+                </>
+            )}
+
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "clamp(3rem,8vw,5rem) clamp(1rem,4vw,2.5rem)", width: "100%", position: "relative", zIndex: 1 }}>
+                <div className="hero-grid" style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "clamp(2.5rem,6vw,5rem)", alignItems: "center" }}>
+
+                    {/* Left */}
+                    <div>
+                        <Reveal delay={0}>
+                            <div style={{
+                                display: "inline-flex", alignItems: "center", gap: 8,
+                                background: dark ? `${K.neon}10` : `${K.neonDim}15`,
+                                border: `1px solid ${K.neon}35`, borderRadius: 99,
+                                padding: "5px 14px 5px 9px", marginBottom: 28,
+                            }}>
+                                <span style={{ width: 7, height: 7, borderRadius: "50%", background: K.neon, display: "inline-block", animation: "pulse-dot 2s ease infinite", boxShadow: `0 0 8px ${K.neon}` }} />
+                                <span style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: K.neon, letterSpacing: "0.1em", textTransform: "uppercase" }}>Available for projects & roles</span>
+                            </div>
+                        </Reveal>
+
+                        <Reveal delay={0.08}>
+                            <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 700, color: theme.textSub, letterSpacing: "0.16em", textTransform: "uppercase", marginBottom: 10 }}>
+                                ⟶ Rendyll Ryan Cabardo
+                            </div>
+                            <h1 style={{
+                                fontFamily: "var(--display)",
+                                fontSize: "clamp(2.8rem, 7vw, 5rem)",
+                                fontWeight: 800, lineHeight: 0.97,
+                                letterSpacing: "-0.04em", margin: "0 0 18px", color: theme.text,
+                            }}>
+                                Building<br />
+                                <TypewriterRole />
+                            </h1>
+                        </Reveal>
+
+                        <Reveal delay={0.15}>
+                            <p style={{
+                                fontFamily: "var(--sans)", fontSize: "clamp(.9rem,1.5vw,1.05rem)",
+                                lineHeight: 1.8, color: theme.textSub, maxWidth: 490, margin: "0 0 32px",
+                            }}>
+                                {personal.bio}
+                            </p>
+                        </Reveal>
+
+                        <Reveal delay={0.21}>
+                            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 48 }}>
+                                <a href="#projects" style={{
+                                    textDecoration: "none", fontFamily: "var(--sans)", fontWeight: 700, fontSize: 13.5,
+                                    padding: "11px 26px", borderRadius: 8,
+                                    background: K.neon, color: K.dBg, letterSpacing: "0.01em",
+                                    boxShadow: `0 0 28px ${K.neon}35`,
+                                    transition: "all .2s",
+                                }}
+                                    onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = `0 6px 36px ${K.neon}55`; }}
+                                    onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = `0 0 28px ${K.neon}35`; }}>
+                                    View Projects →
+                                </a>
+                                <a href="#contact" style={{
+                                    textDecoration: "none", fontFamily: "var(--sans)", fontWeight: 700, fontSize: 13.5,
+                                    padding: "10px 24px", borderRadius: 8,
+                                    border: `1.5px solid ${theme.borderHi}`, color: theme.text,
+                                    transition: "all .2s",
+                                }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = K.neon; e.currentTarget.style.color = K.neon; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = theme.borderHi; e.currentTarget.style.color = theme.text; }}>
+                                    Get In Touch
+                                </a>
+                            </div>
+                        </Reveal>
+
+                        <Reveal delay={0.28}>
+                            <div style={{ display: "flex", flexWrap: "wrap" }}>
+                                {STATS.map(({ num, label, sub }, i) => (
+                                    <div key={label} style={{
+                                        padding: "16px 24px",
+                                        borderLeft: i === 0 ? "none" : `1px solid ${theme.border}`,
+                                        ...(i === 0 ? { paddingLeft: 0 } : {}),
+                                    }}>
+                                        <div style={{ fontFamily: "var(--display)", fontSize: "clamp(1.5rem,2.5vw,2rem)", fontWeight: 800, color: K.neon, letterSpacing: "-0.04em", lineHeight: 1 }}>{num}</div>
+                                        <div style={{ fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, color: theme.text, marginTop: 3 }}>{label}</div>
+                                        <div style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: theme.textSub, marginTop: 1, letterSpacing: "0.05em" }}>{sub}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Reveal>
+                    </div>
+
+                    {/* Photo */}
+                    <Reveal delay={0.15} className="hero-photo">
+                        <PhotoCard dark={dark} theme={theme} />
+                    </Reveal>
                 </div>
-            </Wrap>
+
+                {/* Scroll indicator */}
+                <div style={{ position: "absolute", bottom: -20, left: "50%", transform: "translateX(-50%)", display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, color: theme.textSub, letterSpacing: "0.15em", textTransform: "uppercase" }}>Scroll</span>
+                    <div style={{ width: 1, height: 38, background: `linear-gradient(to bottom, ${K.neon}, transparent)`, animation: "scroll-line 1.8s ease infinite" }} />
+                </div>
+            </div>
         </div>
     );
 }
 
-function ProjectCard({ p, i, theme }: { p: Project; i: number; theme: Theme }) {
-    const [hov, setHov] = useState(false);
+// ─────────────────────────────────────────────────────────────────
+// MARQUEE  — dual row, opposite directions
+// ─────────────────────────────────────────────────────────────────
 
+function Marquee({ dark }: { dark: boolean }) {
+    const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
+    const row = (rev: boolean) => (
+        <div style={{ overflow: "hidden", padding: "7px 0" }}>
+            <div style={{
+                display: "flex", gap: 40, width: "max-content",
+                animation: `${rev ? "marquee-rev" : "marquee"} 30s linear infinite`,
+                fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 700,
+                letterSpacing: "0.18em", textTransform: "uppercase",
+                color: rev ? (dark ? `${K.neon}55` : `${K.neonDim}50`) : K.neon,
+            }}>
+                {items.map((item, i) => (
+                    <span key={i} style={{ display: "flex", alignItems: "center", gap: 40 }}>
+                        {item}<span style={{ opacity: 0.3, fontSize: 5 }}>◆</span>
+                    </span>
+                ))}
+            </div>
+        </div>
+    );
     return (
-        <Fade delay={i * 0.08}>
-            <div
-                className="proj-card"
+        <div style={{
+            background: dark ? K.dBgAlt : K.lBgAlt,
+            borderTop: `1px solid ${dark ? K.dBorder : K.lBorder}`,
+            borderBottom: `1px solid ${dark ? K.dBorder : K.lBorder}`,
+            padding: "2px 0",
+        }}>
+            {row(false)}
+            <div style={{ height: 1, background: dark ? `${K.neon}10` : `${K.neonDim}14` }} />
+            {row(true)}
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────────────────────────
+
+function Projects({ dark, theme }: { dark: boolean; theme: Theme }) {
+    return (
+        <div id="projects" style={{ padding: "clamp(4rem,9vw,7rem) 0" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem,4vw,2.5rem)" }}>
+                <Reveal>
+                    <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "clamp(2rem,4vw,3.5rem)", flexWrap: "wrap", gap: 12 }}>
+                        <div>
+                            <div style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: K.neon, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>
+                                ⟶ 02 · Selected Work
+                            </div>
+                            <h2 style={{ fontFamily: "var(--display)", fontSize: "clamp(2rem,4.5vw,3.2rem)", fontWeight: 800, letterSpacing: "-0.04em", margin: 0, color: theme.text }}>Projects</h2>
+                        </div>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: theme.textSub, letterSpacing: "0.1em", textTransform: "uppercase" }}>{PROJECTS.length} shipped</span>
+                    </div>
+                </Reveal>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "clamp(1.25rem,2.5vw,2rem)" }}>
+                    {PROJECTS.map((p, i) => <ProjectCard key={p.id} p={p} i={i} dark={dark} theme={theme} />)}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ProjectCard({ p, i, dark, theme }: { p: Project; i: number; dark: boolean; theme: Theme }) {
+    const [hov, setHov] = useState(false);
+    return (
+        <Reveal delay={i * 0.1}>
+            <div className="proj-card"
                 onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
                 style={{
-                    display: "grid", gridTemplateColumns: "1fr 260px",
-                    borderRadius: 16, border: `1.5px solid ${hov ? `${p.accent}55` : theme.border}`,
-                    background: theme.surface, overflow: "hidden",
-                    transform: hov ? "translateY(-3px)" : "none",
-                    boxShadow: hov ? `0 16px 48px ${p.accent}18` : "none",
-                    transition: "all .28s cubic-bezier(.25,.46,.45,.94)",
+                    display: "grid", gridTemplateColumns: "1fr 280px",
+                    borderRadius: 18,
+                    border: `1.5px solid ${hov ? p.accent + "50" : theme.border}`,
+                    background: hov && dark ? `linear-gradient(135deg, ${K.dBgCard}, ${p.accent}05)` : theme.bgCard,
+                    overflow: "hidden",
+                    transform: hov ? "translateY(-4px)" : "none",
+                    boxShadow: hov
+                        ? `0 20px 60px ${p.accent}16, 0 0 0 1px ${p.accent}18`
+                        : (dark ? `0 2px 20px rgba(0,0,0,.4)` : `0 2px 16px rgba(0,0,0,.05)`),
+                    transition: "all .3s cubic-bezier(.22,1,.36,1)",
                 }}>
 
                 {/* Text */}
-                <div style={{ padding: "clamp(1.25rem,3.5vw,2rem)", display: "flex", flexDirection: "column" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 12 }}>
+                <div style={{ padding: "clamp(1.5rem,3.5vw,2.25rem)", display: "flex", flexDirection: "column" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
                         <span style={{
-                            fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700,
-                            letterSpacing: "0.12em", textTransform: "uppercase",
-                            color: p.accent, padding: "3px 8px", borderRadius: 4,
-                            background: `${p.accent}18`, border: `1px solid ${p.accent}28`,
-                        }}>{p.type}</span>
-                        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: theme.textMuted }}>{p.year}</span>
+                            fontFamily: "var(--display)", fontSize: "clamp(2.5rem,5vw,3.5rem)",
+                            fontWeight: 800, color: dark ? `${p.accent}18` : `${p.accent}16`,
+                            letterSpacing: "-0.06em", lineHeight: 1, userSelect: "none",
+                        }}>{p.number}</span>
+                        <div>
+                            <span style={{
+                                fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700,
+                                letterSpacing: "0.12em", textTransform: "uppercase",
+                                color: p.accent, padding: "2px 8px", borderRadius: 4,
+                                background: `${p.accent}14`, border: `1px solid ${p.accent}25`,
+                            }}>{p.type}</span>
+                            <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: theme.textSub, marginLeft: 8 }}>{p.year}</span>
+                        </div>
                     </div>
 
-                    <h3 style={{
-                        fontFamily: "var(--display)",
-                        fontSize: "clamp(1.4rem, 2.8vw, 2rem)", fontWeight: 800,
-                        letterSpacing: "-0.04em", color: theme.text, margin: "0 0 4px", lineHeight: 1.05,
-                    }}>{p.title}</h3>
+                    <h3 style={{ fontFamily: "var(--display)", fontSize: "clamp(1.5rem,2.8vw,2.1rem)", fontWeight: 800, letterSpacing: "-0.04em", color: theme.text, margin: "0 0 4px", lineHeight: 1.05 }}>{p.title}</h3>
                     <p style={{ fontFamily: "var(--sans)", fontSize: 12.5, fontWeight: 600, color: p.accent, margin: "0 0 12px" }}>{p.subtitle}</p>
-                    <p style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: theme.textMuted, lineHeight: 1.75, margin: "0 0 16px" }}>{p.description}</p>
+                    <p style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: theme.textSub, lineHeight: 1.75, margin: "0 0 16px" }}>{p.description}</p>
 
-                    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 16px", display: "flex", flexDirection: "column", gap: 5 }}>
+                    <ul style={{ listStyle: "none", padding: 0, margin: "0 0 18px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "5px 12px" }}>
                         {p.highlights.map(h => (
-                            <li key={h} style={{ fontFamily: "var(--sans)", fontSize: 12.5, color: theme.textMuted, display: "flex", alignItems: "center", gap: 8 }}>
+                            <li key={h} style={{ fontFamily: "var(--sans)", fontSize: 12, color: theme.textSub, display: "flex", alignItems: "center", gap: 6 }}>
                                 <span style={{ color: p.accent, fontSize: 7, flexShrink: 0 }}>◆</span>{h}
                             </li>
                         ))}
                     </ul>
 
-                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 20, marginTop: "auto" }}>
-                        {p.tags.map(t => <Tag key={t} accent={p.accent}>{t}</Tag>)}
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: "auto", marginBottom: 18 }}>
+                        {p.tags.map(t => <Chip key={t} accent={p.accent} dark={dark}>{t}</Chip>)}
                     </div>
 
                     <button style={{
                         fontFamily: "var(--sans)", alignSelf: "flex-start",
-                        padding: "8px 18px", borderRadius: 7, fontWeight: 700, fontSize: 12,
+                        padding: "9px 20px", borderRadius: 8, fontWeight: 700, fontSize: 12.5,
                         background: hov ? p.accent : "transparent",
-                        color: hov ? "#fff" : theme.text,
-                        border: `1.5px solid ${hov ? p.accent : theme.borderStrong}`,
+                        color: hov ? (p.accent === K.neon ? K.dBg : "#fff") : theme.text,
+                        border: `1.5px solid ${hov ? p.accent : theme.borderHi}`,
                         cursor: "pointer", transition: "all .22s",
+                        boxShadow: hov ? `0 0 20px ${p.accent}40` : "none",
                     }}>View Project →</button>
                 </div>
 
                 {/* Visual */}
                 <div className="proj-card-visual" style={{
-                    background: `linear-gradient(160deg, ${p.accent}10 0%, ${p.accent}22 100%)`,
+                    background: dark
+                        ? `linear-gradient(160deg, ${p.accent}0C, ${p.accent}18)`
+                        : `linear-gradient(160deg, ${p.accent}08, ${p.accent}12)`,
                     borderLeft: `1.5px solid ${theme.border}`,
                     display: "flex", alignItems: "center", justifyContent: "center",
                     position: "relative", overflow: "hidden",
                 }}>
-                    <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(${p.accent}10 1px, transparent 1px), linear-gradient(90deg, ${p.accent}10 1px, transparent 1px)`, backgroundSize: "26px 26px" }} />
-                    <div style={{ position: "absolute", top: -48, right: -48, width: 150, height: 150, borderRadius: "50%", background: `${p.accent}0E`, border: `1.5px solid ${p.accent}18` }} />
-                    <div style={{ position: "absolute", bottom: -30, left: -30, width: 90, height: 90, borderRadius: "50%", background: `${p.accent}08`, border: `1.5px solid ${p.accent}12` }} />
+                    <div style={{ position: "absolute", inset: 0, backgroundImage: `linear-gradient(${p.accent}10 1px, transparent 1px), linear-gradient(90deg, ${p.accent}10 1px, transparent 1px)`, backgroundSize: "24px 24px" }} />
+                    <div style={{ position: "absolute", top: -50, right: -50, width: 160, height: 160, borderRadius: "50%", background: `${p.accent}0C`, border: `1.5px solid ${p.accent}18` }} />
+                    <div style={{ position: "absolute", bottom: -35, left: -35, width: 100, height: 100, borderRadius: "50%", background: `${p.accent}08` }} />
                     <div style={{ position: "relative", textAlign: "center" }}>
-                        <div style={{ fontSize: 60, lineHeight: 1 }}>{p.emoji}</div>
-                        <div style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, color: p.accent, letterSpacing: "0.14em", textTransform: "uppercase", marginTop: 10, opacity: 0.65 }}>{p.id.toUpperCase()}</div>
+                        <div style={{ fontSize: 62, lineHeight: 1, filter: `drop-shadow(0 0 18px ${p.accent}50)` }}>{p.emoji}</div>
+                        <div style={{ fontFamily: "var(--mono)", fontSize: 8.5, fontWeight: 700, color: p.accent, letterSpacing: "0.16em", textTransform: "uppercase", marginTop: 12, opacity: 0.65 }}>{p.id.toUpperCase()}</div>
                     </div>
                 </div>
             </div>
-        </Fade>
+        </Reveal>
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // ABOUT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 function About({ dark, theme }: { dark: boolean; theme: Theme }) {
+    const cats = Object.keys(STACK_ACC) as Array<keyof typeof STACK_ACC>;
+
     return (
-        <div id="about" style={{ padding: "clamp(3rem,7vw,5.5rem) 0" }}>
-            <Wrap>
-                <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(2rem,5vw,4.5rem)", alignItems: "start" }}>
+        <div id="about" style={{
+            background: dark ? K.dBgAlt : K.lBgAlt,
+            borderTop: `1px solid ${theme.border}`,
+            borderBottom: `1px solid ${theme.border}`,
+            padding: "clamp(4rem,9vw,7rem) 0",
+            position: "relative", overflow: "hidden",
+        }}>
+            {dark && <div style={{ position: "absolute", top: "30%", left: "-10%", width: 500, height: 500, borderRadius: "50%", background: `radial-gradient(ellipse, ${K.neon}04, transparent 65%)`, pointerEvents: "none" }} />}
 
-                    <Fade>
-                        <Label>About Me</Label>
-                        <h2 style={{
-                            fontFamily: "var(--display)",
-                            fontSize: "clamp(1.8rem, 3.8vw, 2.6rem)", fontWeight: 800,
-                            letterSpacing: "-0.04em", margin: "0 0 18px", color: theme.text, lineHeight: 1.1,
-                        }}>
-                            Crafting digital<br />experiences that<br />
-                            <span style={{ color: C.forest }}>actually matter.</span>
-                        </h2>
-                        <p style={{ fontFamily: "var(--sans)", fontSize: 14, color: theme.textMuted, lineHeight: 1.8, margin: "0 0 12px" }}>{personal.bio1}</p>
-                        <p style={{ fontFamily: "var(--sans)", fontSize: 14, color: theme.textMuted, lineHeight: 1.8, margin: "0 0 28px" }}>{personal.bio2}</p>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem,4vw,2.5rem)", position: "relative", zIndex: 1 }}>
+                <Reveal>
+                    <div style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: K.neon, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>⟶ 03 · About Me</div>
+                    <h2 style={{ fontFamily: "var(--display)", fontSize: "clamp(2rem,4.5vw,3.2rem)", fontWeight: 800, letterSpacing: "-0.04em", margin: "0 0 clamp(2rem,4vw,3.5rem)", color: theme.text }}>
+                        The person behind<br /><span style={{ color: K.neon }}>the code.</span>
+                    </h2>
+                </Reveal>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
+                <div className="about-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "clamp(2rem,5vw,5rem)", alignItems: "start" }}>
+                    {/* Left */}
+                    <Reveal>
+                        <p style={{ fontFamily: "var(--sans)", fontSize: 15, color: theme.textSub, lineHeight: 1.82, marginBottom: 16 }}>{personal.bio}</p>
+                        <p style={{ fontFamily: "var(--sans)", fontSize: 15, color: theme.textSub, lineHeight: 1.82, marginBottom: 32 }}>
+                            Based in Bogo City, Cebu. I approach every project with a systems-thinking mindset — whether it's architecting a real-time monitoring platform or building an inventory management system from scratch.
+                        </p>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 28 }}>
                             {[
-                                { label: "Age", value: "21 years old" },
-                                { label: "Location", value: "Bogo City, Cebu" },
-                                { label: "School", value: "CRMC" },
-                                { label: "Course", value: "BSIT — 4th Year" },
-                                { label: "Email", value: personal.email, small: true },
-                                { label: "Status", value: "Open to Work 🟢" },
-                            ].map(({ label, value, small }) => (
-                                <div key={label} style={{
-                                    padding: "11px 13px", borderRadius: 9,
-                                    border: `1.5px solid ${theme.border}`, background: theme.surfaceAlt,
-                                }}>
-                                    <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 4 }}>{label}</div>
-                                    <div style={{ fontFamily: "var(--sans)", fontSize: small ? 10 : 12, fontWeight: 600, color: theme.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</div>
+                                { k: "Age", v: "21 years old" },
+                                { k: "Location", v: "Bogo City, Cebu" },
+                                { k: "School", v: "CRMC" },
+                                { k: "Course", v: "BSIT — 4th Year" },
+                                { k: "Email", v: personal.email, sm: true },
+                                { k: "Status", v: "Open to Work 🟢" },
+                            ].map(({ k, v, sm }) => (
+                                <div key={k} style={{
+                                    padding: "11px 14px", borderRadius: 10,
+                                    border: `1.5px solid ${theme.border}`, background: theme.bgCard,
+                                    transition: "border-color .18s, box-shadow .18s",
+                                }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = K.neon + "45"; e.currentTarget.style.boxShadow = `0 0 12px ${K.neon}10`; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.boxShadow = ""; }}>
+                                    <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: K.neon, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 4 }}>{k}</div>
+                                    <div style={{ fontFamily: "var(--sans)", fontSize: (sm ? 10 : 12.5), fontWeight: 600, color: theme.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v}</div>
                                 </div>
                             ))}
                         </div>
-                    </Fade>
 
-                    <Fade delay={0.1}>
-                        <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: theme.textMuted, textTransform: "uppercase", letterSpacing: "0.14em", marginBottom: 16 }}>Tech Stack</div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                            {Object.values(personal.social).map(({ label, href }) => (
+                                <a key={label} href={href} target="_blank" rel="noreferrer" style={{
+                                    textDecoration: "none", fontFamily: "var(--sans)", fontSize: 12.5, fontWeight: 700,
+                                    padding: "8px 16px", borderRadius: 8,
+                                    border: `1.5px solid ${theme.borderHi}`, color: theme.textSub,
+                                    transition: "all .18s",
+                                }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = K.neon; e.currentTarget.style.color = K.neon; e.currentTarget.style.background = `${K.neon}0E`; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = theme.borderHi; e.currentTarget.style.color = theme.textSub; e.currentTarget.style.background = "transparent"; }}>
+                                    {label} ↗
+                                </a>
+                            ))}
+                        </div>
+                    </Reveal>
 
-                        {(Object.keys(STACK_CATS) as Array<keyof typeof STACK_CATS>).map(cat => (
-                            <div key={cat} style={{ marginBottom: 18 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>
-                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: STACK_CATS[cat], display: "inline-block", flexShrink: 0 }} />
-                                    <span style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: STACK_CATS[cat], textTransform: "uppercase", letterSpacing: "0.1em" }}>{cat}</span>
+                    {/* Right: stack */}
+                    <Reveal delay={0.1}>
+                        <div style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, color: theme.textSub, textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: 18 }}>Tech Stack</div>
+                        {cats.map(cat => (
+                            <div key={cat} style={{ marginBottom: 20 }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 9 }}>
+                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: STACK_ACC[cat], boxShadow: dark ? `0 0 8px ${STACK_ACC[cat]}` : "none", display: "inline-block", flexShrink: 0 }} />
+                                    <span style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, color: STACK_ACC[cat], textTransform: "uppercase", letterSpacing: "0.1em" }}>{cat}</span>
                                 </div>
                                 <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                                     {TECH.filter(t => t.cat === cat).map(({ name }) => (
                                         <span key={name} style={{
-                                            fontFamily: "var(--sans)", fontSize: 11.5, fontWeight: 600,
-                                            padding: "4px 10px", borderRadius: 6,
+                                            fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600,
+                                            padding: "4px 11px", borderRadius: 6,
                                             border: `1.5px solid ${theme.border}`, color: theme.text,
-                                            background: dark ? `${STACK_CATS[cat]}0A` : `${STACK_CATS[cat]}07`,
-                                            transition: "border-color .18s", cursor: "default",
+                                            background: dark ? `${STACK_ACC[cat]}08` : `${STACK_ACC[cat]}06`,
+                                            cursor: "default", transition: "all .18s",
                                         }}
-                                            onMouseEnter={e => (e.currentTarget.style.borderColor = STACK_CATS[cat])}
-                                            onMouseLeave={e => (e.currentTarget.style.borderColor = theme.border)}>
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = STACK_ACC[cat]; e.currentTarget.style.color = STACK_ACC[cat]; e.currentTarget.style.background = `${STACK_ACC[cat]}12`; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.color = theme.text; e.currentTarget.style.background = dark ? `${STACK_ACC[cat]}08` : `${STACK_ACC[cat]}06`; }}>
                                             {name}
                                         </span>
                                     ))}
                                 </div>
                             </div>
                         ))}
-
-                        {/* ID card */}
-                        <div style={{
-                            marginTop: 22, borderRadius: 13,
-                            background: dark ? C.dCream : C.cream,
-                            border: `1.5px solid ${theme.borderStrong}`,
-                            padding: "18px", display: "flex", alignItems: "center", gap: 14,
-                        }}>
-                            <div style={{
-                                width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
-                                background: `${C.forest}25`, border: `2px solid ${C.forest}40`,
-                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22,
-                            }}>👨‍💻</div>
-                            <div style={{ minWidth: 0 }}>
-                                <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 14.5, color: theme.text, letterSpacing: "-0.02em" }}>Rendyll Ryan Cabardo</div>
-                                <div style={{ fontFamily: "var(--sans)", fontSize: 12, color: theme.textMuted, marginTop: 2 }}>Full-Stack Developer · CRMC</div>
-                                <div style={{ fontFamily: "var(--mono)", fontSize: 8, color: C.forest, marginTop: 5, fontWeight: 700, letterSpacing: "0.06em" }}>BOGO CITY, CEBU 🇵🇭 · UTC+8</div>
-                            </div>
-                        </div>
-                    </Fade>
+                    </Reveal>
                 </div>
-            </Wrap>
+            </div>
         </div>
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // ACHIEVEMENTS
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 function Achievements({ dark, theme }: { dark: boolean; theme: Theme }) {
     return (
-        <div id="achievements" style={{
-            background: dark ? C.dSurfAlt : C.lSurfAlt,
-            borderTop: `1px solid ${theme.border}`, borderBottom: `1px solid ${theme.border}`,
-            padding: "clamp(3rem,7vw,5.5rem) 0",
-        }}>
-            <Wrap>
-                <Fade>
-                    <Label>Recognition</Label>
-                    <h2 style={{
-                        fontFamily: "var(--display)",
-                        fontSize: "clamp(1.8rem, 3.8vw, 2.8rem)", fontWeight: 800,
-                        letterSpacing: "-0.04em", margin: "0 0 clamp(1.75rem,4vw,2.75rem)", color: theme.text,
-                    }}>Awards & Achievements</h2>
-                </Fade>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 250px), 1fr))", gap: 10 }}>
-                    {ACHIEVEMENTS.map((a, i) => <AchievCard key={a.title} a={a} i={i} theme={theme} />)}
+        <div id="achievements" style={{ padding: "clamp(4rem,9vw,7rem) 0" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem,4vw,2.5rem)" }}>
+                <Reveal>
+                    <div style={{ fontFamily: "var(--mono)", fontSize: 10, fontWeight: 700, color: K.neon, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 8 }}>⟶ 04 · Recognition</div>
+                    <h2 style={{ fontFamily: "var(--display)", fontSize: "clamp(2rem,4.5vw,3.2rem)", fontWeight: 800, letterSpacing: "-0.04em", margin: "0 0 clamp(2rem,4vw,3rem)", color: theme.text }}>
+                        Awards & Achievements
+                    </h2>
+                </Reveal>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%,258px), 1fr))", gap: 10 }}>
+                    {ACHIEVEMENTS.map((a, i) => <AchievCard key={a.title} a={a} i={i} dark={dark} theme={theme} />)}
                 </div>
-            </Wrap>
+            </div>
         </div>
     );
 }
 
-function AchievCard({ a, i, theme }: { a: Achievement; i: number; theme: Theme }) {
-    const acc = CAT_ACCENTS[a.cat];
+function AchievCard({ a, i, dark, theme }: { a: Achievement; i: number; dark: boolean; theme: Theme }) {
+    const acc = CAT_ACC[a.cat];
     return (
-        <Fade delay={i * 0.045}>
+        <Reveal delay={i * 0.04}>
             <div style={{
-                padding: "18px", borderRadius: 13,
-                border: `1.5px solid ${theme.border}`, background: theme.surface,
-                position: "relative", overflow: "hidden", height: "100%", boxSizing: "border-box",
-                transition: "transform .2s, border-color .2s, box-shadow .2s",
+                padding: "18px", borderRadius: 14,
+                border: `1.5px solid ${theme.border}`, background: theme.bgCard,
+                position: "relative", overflow: "hidden", height: "100%",
+                boxSizing: "border-box", transition: "all .22s",
             }}
-                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = acc; e.currentTarget.style.boxShadow = `0 8px 28px ${acc}18`; }}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.borderColor = acc + "50"; e.currentTarget.style.boxShadow = `0 8px 28px ${acc}16`; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.boxShadow = ""; }}>
 
-                <div style={{ position: "absolute", top: 0, right: 0, width: 46, height: 46, borderRadius: "0 13px 0 46px", background: `${acc}0C` }} />
+                <div style={{ position: "absolute", top: 0, right: 0, width: 50, height: 50, borderRadius: "0 14px 0 50px", background: `${acc}10` }} />
+                {dark && <div style={{ position: "absolute", top: 0, right: 0, width: 80, height: 80, borderRadius: "50%", background: `radial-gradient(circle at top right, ${acc}12, transparent 70%)`, pointerEvents: "none" }} />}
 
                 <div style={{
                     display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 13,
-                    fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700, letterSpacing: "0.12em",
-                    textTransform: "uppercase", color: acc, padding: "3px 7px", borderRadius: 4,
-                    background: `${acc}14`,
+                    fontFamily: "var(--mono)", fontSize: 7, fontWeight: 700,
+                    letterSpacing: "0.12em", textTransform: "uppercase",
+                    color: acc, padding: "2px 7px", borderRadius: 4,
+                    background: `${acc}14`, border: `1px solid ${acc}25`,
                 }}>
-                    <span style={{ width: 4, height: 4, borderRadius: "50%", background: acc, display: "inline-block" }} />
+                    <span style={{ width: 4, height: 4, borderRadius: "50%", background: acc, display: "inline-block", boxShadow: dark ? `0 0 5px ${acc}` : "none" }} />
                     {a.cat}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 11 }}>
-                    <div style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{a.icon}</div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                    <div style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>{a.icon}</div>
                     <div style={{ minWidth: 0 }}>
                         <h3 style={{ fontFamily: "var(--sans)", fontWeight: 700, fontSize: 12.5, color: theme.text, margin: "0 0 3px", lineHeight: 1.4 }}>{a.title}</h3>
-                        <p style={{ fontFamily: "var(--sans)", fontSize: 11, color: theme.textMuted, margin: "0 0 6px", lineHeight: 1.45 }}>{a.org}</p>
-                        <span style={{ fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 700, color: acc, letterSpacing: "0.06em" }}>{a.year}</span>
+                        <p style={{ fontFamily: "var(--sans)", fontSize: 11, color: theme.textSub, margin: "0 0 7px" }}>{a.org}</p>
+                        <span style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, color: acc, letterSpacing: "0.06em" }}>{a.year}</span>
                     </div>
                 </div>
             </div>
-        </Fade>
+        </Reveal>
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // CONTACT
-// ─────────────────────────────────────────────
-
-function Contact() {
+// ─────────────────────────────────────────────────────────────────
+function Contact({ dark, theme }: { dark: boolean; theme: Theme }) {
     const [focused, setFocused] = useState<string | null>(null);
     const [sent, setSent] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const [form, setForm] = useState({
+        name: "",
+        email: "",
+        subject: "",
+        message: "",
+    });
 
     const iStyle = (id: string): CSSProperties => ({
         fontFamily: "var(--sans)", width: "100%",
-        padding: "10px 13px", borderRadius: 7, fontSize: 13,
-        border: `1.5px solid ${focused === id ? `${C.sageLight}90` : `${C.sage}38`}`,
-        background: `rgba(232,240,222,0.07)`, color: C.cream, outline: "none",
-        boxSizing: "border-box", fontWeight: 500, transition: "border-color .18s",
+        padding: "11px 14px", borderRadius: 8, fontSize: 13.5,
+        border: `1.5px solid ${focused === id ? K.neon + "55" : theme.border}`,
+        background: focused === id ? `${K.neon}06` : theme.bgCard,
+        color: theme.text, outline: "none", boxSizing: "border-box",
+        fontWeight: 500, transition: "border-color .18s, background .18s",
     });
 
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!form.name || !form.email || !form.message) {
+            alert("Please fill all required fields");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const res = await fetch("/.netlify/functions/send-email", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(form),
+            });
+
+            if (!res.ok) throw new Error("Failed");
+
+            setSent(true);
+            setForm({ name: "", email: "", subject: "", message: "" });
+
+            setTimeout(() => setSent(false), 3200);
+        } catch {
+            alert("Something went wrong");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div id="contact" style={{ background: C.forestDeep, padding: "clamp(3rem,7vw,5.5rem) 0" }}>
-            <Wrap>
-                <Fade>
-                    <div style={{ textAlign: "center", marginBottom: 40 }}>
-                        <Label light>Let's Connect</Label>
-                        <h2 style={{
-                            fontFamily: "var(--display)",
-                            fontSize: "clamp(1.9rem, 5vw, 3.2rem)", fontWeight: 800,
-                            letterSpacing: "-0.04em", margin: "8px 0 14px", color: C.cream, lineHeight: 1.05,
-                        }}>Got a project<br />in mind?</h2>
-                        <p style={{ fontFamily: "var(--sans)", fontSize: 14.5, color: `${C.cream}75`, lineHeight: 1.75, maxWidth: 380, margin: "0 auto" }}>
-                            Open to freelance projects, internships, and full-time roles.
-                        </p>
-                    </div>
+        <div id="contact" style={{ background: dark ? K.dBg : K.lBg }}>
+            <form onSubmit={handleSubmit}>
 
-                    {/* Social links */}
-                    <div style={{ display: "flex", justifyContent: "center", gap: 7, marginBottom: 32, flexWrap: "wrap" }}>
-                        {Object.entries(personal.social).map(([key, href]) => (
-                            <a key={key} href={href} target="_blank" rel="noreferrer" style={{
-                                fontFamily: "var(--sans)", textDecoration: "none", fontSize: 12, fontWeight: 600,
-                                color: `${C.cream}70`, padding: "7px 15px", borderRadius: 7,
-                                border: `1px solid ${C.sage}38`, transition: "all .18s", textTransform: "capitalize",
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.color = C.cream; e.currentTarget.style.borderColor = `${C.sage}75`; e.currentTarget.style.background = `rgba(232,240,222,0.07)`; }}
-                                onMouseLeave={e => { e.currentTarget.style.color = `${C.cream}70`; e.currentTarget.style.borderColor = `${C.sage}38`; e.currentTarget.style.background = "transparent"; }}>
-                                {key}
-                            </a>
-                        ))}
-                    </div>
+                {/* NAME + EMAIL */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9 }}>
+                    <input
+                        type="text"
+                        placeholder="Your Name"
+                        value={form.name}
+                        onChange={(e) => setForm({ ...form, name: e.target.value })}
+                        onFocus={() => setFocused("name")}
+                        onBlur={() => setFocused(null)}
+                        style={iStyle("name")}
+                    />
 
-                    {/* Form */}
-                    <div style={{ maxWidth: 600, margin: "0 auto" }}>
-                        <div style={{ background: `rgba(232,240,222,0.05)`, border: `1.5px solid ${C.sage}28`, borderRadius: 14, padding: "clamp(1.25rem,4vw,1.75rem)" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginBottom: 9 }} className="form-grid">
-                                {[{ id: "name", ph: "Your Name", type: "text" }, { id: "email", ph: "Your Email", type: "email" }].map(({ id, ph, type }) => (
-                                    <input key={id} type={type} placeholder={ph}
-                                        onFocus={() => setFocused(id)} onBlur={() => setFocused(null)}
-                                        style={iStyle(id)} />
-                                ))}
-                            </div>
-                            <input type="text" placeholder="Subject"
-                                onFocus={() => setFocused("sub")} onBlur={() => setFocused(null)}
-                                style={{ ...iStyle("sub"), marginBottom: 9 }} />
-                            <textarea rows={4} placeholder="Tell me about your project or opportunity..."
-                                onFocus={() => setFocused("msg")} onBlur={() => setFocused(null)}
-                                style={{ ...iStyle("msg"), resize: "vertical", marginBottom: 14 }} />
-                            <button onClick={() => { setSent(true); setTimeout(() => setSent(false), 3000); }} style={{
-                                fontFamily: "var(--sans)", width: "100%", padding: "12px",
-                                borderRadius: 8, fontWeight: 800, fontSize: 13,
-                                border: "none", background: sent ? C.sage : C.cream,
-                                color: sent ? "#fff" : C.forestDeep,
-                                cursor: "pointer", transition: "all .22s",
-                            }}>
-                                {sent ? "Message Sent! ✓" : "Send Message ✦"}
-                            </button>
-                        </div>
-                        <p style={{ fontFamily: "var(--sans)", textAlign: "center", marginTop: 16, fontSize: 12.5, color: `${C.cream}45` }}>
-                            Or email me at{" "}
-                            <a href={`mailto:${personal.email}`} style={{ color: `${C.cream}90`, fontWeight: 700, textDecoration: "none" }}>{personal.email}</a>
-                        </p>
-                    </div>
-                </Fade>
-            </Wrap>
+                    <input
+                        type="email"
+                        placeholder="Your Email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        onFocus={() => setFocused("email")}
+                        onBlur={() => setFocused(null)}
+                        style={iStyle("email")}
+                    />
+                </div>
+
+                {/* SUBJECT */}
+                <input
+                    type="text"
+                    placeholder="Subject"
+                    value={form.subject}
+                    onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                    onFocus={() => setFocused("sub")}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...iStyle("sub"), marginTop: 9 }}
+                />
+
+                {/* MESSAGE */}
+                <textarea
+                    rows={4}
+                    placeholder="Tell me about your project or opportunity..."
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    onFocus={() => setFocused("msg")}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...iStyle("msg"), marginTop: 9, resize: "vertical" }}
+                />
+
+                {/* BUTTON */}
+                <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                        marginTop: 14,
+                        width: "100%",
+                        padding: "13px",
+                        borderRadius: 9,
+                        fontWeight: 800,
+                        border: "none",
+                        cursor: "pointer",
+                        background: sent ? theme.borderHi : K.neon,
+                        color: sent ? theme.text : K.dBg,
+                        boxShadow: sent ? "none" : `0 0 28px ${K.neon}40`,
+                    }}
+                >
+                    {loading ? "Sending..." : sent ? "Message Sent! ✓" : "Send Message →"}
+                </button>
+
+            </form>
         </div>
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // FOOTER
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
-function Footer({ dark }: { dark: boolean }) {
+function Footer() {
     return (
-        <footer style={{ background: dark ? "#080D09" : "#192B1D", padding: "24px 0", borderTop: "1px solid #182418" }}>
-            <Wrap>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 28, height: 28, background: C.forest, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 8.5, fontWeight: 700, color: C.cream }}>RRC</div>
-                        <span style={{ fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, color: `${C.cream}45` }}>Rendyll Ryan Cabardo © 2026</span>
-                    </div>
-                    <div style={{ display: "flex", gap: 5 }}>
-                        {Object.entries(personal.social).map(([key, href]) => (
-                            <a key={key} href={href} target="_blank" rel="noreferrer" style={{
-                                fontFamily: "var(--sans)", textDecoration: "none",
-                                fontSize: 11, fontWeight: 600, padding: "5px 10px", borderRadius: 6,
-                                border: "1px solid #1E2C1E", color: `${C.cream}42`, transition: "all .18s",
-                                textTransform: "capitalize",
-                            }}
-                                onMouseEnter={e => { e.currentTarget.style.color = C.cream; e.currentTarget.style.borderColor = C.sage; }}
-                                onMouseLeave={e => { e.currentTarget.style.color = `${C.cream}42`; e.currentTarget.style.borderColor = "#1E2C1E"; }}>
-                                {key}
-                            </a>
-                        ))}
-                    </div>
-                    <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, color: `${C.cream}25`, fontWeight: 600, letterSpacing: "0.06em" }}>BUILT WITH REACT + TS ✦</div>
+        <footer style={{ background: "#050807", borderTop: "1px solid #182418", padding: "22px 0" }}>
+            <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 clamp(1rem,4vw,2.5rem)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 26, height: 26, borderRadius: 6, background: `linear-gradient(135deg, ${K.neonDim}, ${K.neon})`, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 7.5, fontWeight: 800, color: K.dBg }}>RRC</div>
+                    <span style={{ fontFamily: "var(--sans)", fontSize: 12, fontWeight: 600, color: "rgba(232,245,226,.3)" }}>Rendyll Ryan Cabardo © 2026</span>
                 </div>
-            </Wrap>
+                <div style={{ display: "flex", gap: 5 }}>
+                    {Object.values(personal.social).map(({ label, href }) => (
+                        <a key={label} href={href} target="_blank" rel="noreferrer" style={{
+                            fontFamily: "var(--sans)", textDecoration: "none", fontSize: 11, fontWeight: 600,
+                            padding: "5px 11px", borderRadius: 6, border: "1px solid #1C2C1C",
+                            color: "rgba(232,245,226,.28)", transition: "all .18s",
+                        }}
+                            onMouseEnter={e => { e.currentTarget.style.color = K.neon; e.currentTarget.style.borderColor = K.neon + "45"; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = "rgba(232,245,226,.28)"; e.currentTarget.style.borderColor = "#1C2C1C"; }}>
+                            {label}
+                        </a>
+                    ))}
+                </div>
+                <div style={{ fontFamily: "var(--mono)", fontSize: 7.5, color: "rgba(232,245,226,.18)", fontWeight: 600, letterSpacing: "0.08em" }}>BUILT WITH REACT + TS ✦</div>
+            </div>
         </footer>
     );
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 // ROOT
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
 
 export default function Portfolio() {
-    const [dark, setDark] = useState(false);
+    const [dark, setDark] = useState(true);
     const theme = makeTheme(dark);
 
     return (
@@ -904,47 +1054,51 @@ export default function Portfolio() {
             <style>{`
         :root {
           --display: 'Syne', sans-serif;
-          --sans:    'DM Sans', sans-serif;
-          --mono:    'JetBrains Mono', monospace;
+          --sans: 'DM Sans', sans-serif;
+          --mono: 'JetBrains Mono', monospace;
         }
-        *, *::before, *::after { box-sizing: border-box; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; }
         html { scroll-behavior: smooth; }
         body { -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 
-        @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-50%) } }
-        @keyframes blink   { 0%,100% { opacity:1 } 50% { opacity:.28 } }
+        @keyframes marquee     { from { transform: translateX(0)   } to { transform: translateX(-50%) } }
+        @keyframes marquee-rev { from { transform: translateX(-50%) } to { transform: translateX(0)   } }
+        @keyframes pulse-dot   { 0%,100% { box-shadow: 0 0 8px ${K.neon}; opacity:1 } 50% { box-shadow: 0 0 20px ${K.neon}; opacity:.6 } }
+        @keyframes blink-cursor { 0%,50% { opacity:1 } 51%,100% { opacity:0 } }
+        @keyframes scroll-line  { 0% { opacity:0; transform:scaleY(0); transform-origin:top } 40% { opacity:1; transform:scaleY(1) } 80%,100% { opacity:0; transform:scaleY(1); transform-origin:bottom } }
+
+        ::-webkit-scrollbar       { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: ${K.neon}28; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: ${K.neon}50; }
+
+        ::selection { background: ${K.neon}25; }
+        :focus-visible { outline: 2px solid ${K.neon}; outline-offset: 3px; border-radius: 4px; }
+
+        input::placeholder, textarea::placeholder { color: rgba(107,153,112,.4); }
 
         @media (max-width: 820px) {
-          .d-nav             { display: none !important; }
-          .mob-btn           { display: flex !important; }
-          .hero-grid         { grid-template-columns: 1fr !important; }
-          .hero-card-wrap    { display: none !important; }
-          .about-grid        { grid-template-columns: 1fr !important; }
-          .proj-card         { grid-template-columns: 1fr !important; }
-          .proj-card-visual  { display: none !important; }
-          .form-grid         { grid-template-columns: 1fr !important; }
+          .d-nav            { display: none !important; }
+          .mob-btn          { display: flex !important; }
+          .hero-grid        { grid-template-columns: 1fr !important; }
+          .hero-photo       { display: none !important; }
+          .about-grid       { grid-template-columns: 1fr !important; }
+          .proj-card        { grid-template-columns: 1fr !important; }
+          .proj-card-visual { display: none !important; }
+          .contact-grid     { grid-template-columns: 1fr !important; }
+          .form-grid        { grid-template-columns: 1fr !important; }
         }
-
-        ::-webkit-scrollbar       { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3D6B5235; border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: #3D6B5260; }
-
-        ::selection { background: #3D6B5228; }
-        :focus-visible { outline: 2px solid #3D6B52; outline-offset: 3px; border-radius: 4px; }
-
-        input::placeholder,
-        textarea::placeholder { color: rgba(232,240,222,0.32); }
       `}</style>
 
+            <CursorGlow dark={dark} />
             <Navbar dark={dark} setDark={setDark} theme={theme} />
             <Hero dark={dark} theme={theme} />
-            <Marquee />
-            <Projects theme={theme} />
+            <Marquee dark={dark} />
+            <Projects dark={dark} theme={theme} />
             <About dark={dark} theme={theme} />
             <Achievements dark={dark} theme={theme} />
-            <Contact />
-            <Footer dark={dark} />
+            <Contact dark={dark} theme={theme} />
+            <Footer />
         </div>
     );
 }
