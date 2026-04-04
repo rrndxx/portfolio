@@ -3,6 +3,7 @@ import {
     type ReactNode, type CSSProperties,
     startTransition,
 } from "react";
+import corporate from "./assets/corporate.png";
 
 // ─────────────────────────────────────────────────────────────────
 // TYPES
@@ -395,7 +396,7 @@ function PhotoCard({ dark, theme }: { dark: boolean; theme: Theme }) {
 
                 {/* Avatar */}
                 <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 0, paddingBottom: 64 }}>
-                    <img src="/src/assets/corporate.png" alt="Rendyll" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0, borderRadius: 22 }} />
+                    <img src={corporate} alt="Rendyll" style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", inset: 0, borderRadius: 22 }} />
                     {/* ↑ Replace with: <img src="/your-photo.jpg" alt="Rendyll" style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0,borderRadius:22}} /> */}
                     <div style={{ fontFamily: "var(--display)", fontWeight: 800, fontSize: 15.5, color: theme.text, letterSpacing: "-0.02em" }}>Rendyll Ryan</div>
                     <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: K.neon, marginTop: 5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>Full-Stack Dev</div>
