@@ -320,10 +320,12 @@ function Navbar() {
                             rendyll
                         </span>
                         <span style={{
-                            fontFamily: "var(--mono)",
-                            fontSize: 7.5,
+                            fontFamily: "var(--display)",
+                            fontWeight: 700,
+                            fontSize: 14,
                             color: C.gold,
-                            letterSpacing: "0.22em"
+                            letterSpacing: "-0.01em",
+                            lineHeight: 1
                         }}>
                             .dev
                         </span>
