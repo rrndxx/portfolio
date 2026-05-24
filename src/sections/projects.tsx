@@ -27,7 +27,7 @@ export function Projects() {
                 {/* Large background number watermark */}
                 <span
                   aria-hidden
-                  className="pointer-events-none absolute right-6 top-2 select-none font-heading font-black leading-none text-foreground/[0.04]"
+                  className="pointer-events-none absolute right-6 top-2 select-none font-heading font-black leading-none text-foreground/4"
                   style={{ fontSize: "clamp(6rem,16vw,12rem)" }}
                 >
                   {String(index + 1).padStart(2, "0")}
@@ -73,7 +73,7 @@ export function Projects() {
                     {/* Tags */}
                     <div className="flex flex-wrap gap-2">
                       {project.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="font-mono text-[0.65rem] uppercase tracking-[0.1em]">
+                        <Badge key={tag} variant="outline" className="font-mono text-[0.65rem] uppercase tracking-widest">
                           {tag}
                         </Badge>
                       ))}

@@ -15,7 +15,7 @@ export function Hero() {
       <div className="pointer-events-none absolute inset-0 -z-10 dot-grid opacity-35" />
 
       {/* Radial accent glows */}
-      <div className="pointer-events-none absolute -left-32 -top-32 -z-10 h-[34rem] w-[34rem] rounded-full bg-accent/6 blur-[120px]" />
+      <div className="pointer-events-none absolute -left-32 -top-32 -z-10 h-136 w-136 rounded-full bg-accent/6 blur-[120px]" />
       <div className="pointer-events-none absolute bottom-0 right-0 -z-10 h-72 w-72 rounded-full bg-accent/4 blur-[80px]" />
 
       {/* Bottom separator */}

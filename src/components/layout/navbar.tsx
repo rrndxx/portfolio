@@ -21,9 +21,9 @@ export function Navbar() {
             <span className="block font-heading text-base font-bold tracking-tight">
               rendyll.dev
             </span>
-            <span className="block font-mono text-[0.58rem] uppercase tracking-[0.22em] text-muted-foreground">
+            {/* <span className="block font-mono text-[0.58rem] uppercase tracking-[0.22em] text-muted-foreground">
               Portfolio
-            </span>
+            </span> */}
           </div>
         </a>
 

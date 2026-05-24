@@ -35,4 +35,22 @@ export const projects = [
       "Live inventory sync",
     ],
   },
+  {
+    id: "qrwise-clinics",
+    title: "QR Wise Clinics",
+    subtitle: "Clinic Management System",
+    type: "Client Project",
+    year: "2025",
+    description:
+      "Clinic operations platform for appointments, patient records, scheduling, memberships, inventory management, and transaction tracking.",
+    outcome:
+      "Streamlines daily clinic workflows by centralizing bookings, staff coordination, patient management, and operational records in one system.",
+    tags: ["Next.js", "Supabase", "TanStack Query", "Tailwind", "shadcn/ui"],
+    features: [
+      "Appointment scheduling",
+      "Patient management",
+      "Inventory tracking",
+      "Membership & package management",
+    ],
+  },
 ]

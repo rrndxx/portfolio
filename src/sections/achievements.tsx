@@ -6,11 +6,11 @@ import { SectionHeading } from "@/components/shared/section-heading"
 import { achievements, personal } from "@/data/personal"
 
 const categoryColor: Record<string, string> = {
-  Academic:     "text-cyan-400 border-cyan-400/25 bg-cyan-400/5",
-  Technical:    "text-violet-400 border-violet-400/25 bg-violet-400/5",
-  Competition:  "text-amber-400 border-amber-400/25 bg-amber-400/5",
-  Professional: "text-emerald-400 border-emerald-400/25 bg-emerald-400/5",
-  Leadership:   "text-rose-400 border-rose-400/25 bg-rose-400/5",
+  Academic: "text-sky-700 border-sky-700/20 bg-sky-700/5",
+  Technical: "text-violet-700 border-violet-700/20 bg-violet-700/5",
+  Competition: "text-amber-700 border-amber-700/20 bg-amber-700/5",
+  Professional: "text-emerald-700 border-emerald-700/20 bg-emerald-700/5",
+  Leadership: "text-rose-700 border-rose-700/20 bg-rose-700/5",
 }
 
 export function Achievements() {

@@ -36,8 +36,8 @@ export function About() {
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
                   { icon: GraduationCap, label: "Education", value: "BSIT, Magna Cum Laude — CRMC" },
-                  { icon: MapPin,        label: "Location",  value: personal.location },
-                  { icon: Code2,         label: "Focus",     value: "Full-stack systems" },
+                  { icon: MapPin, label: "Location", value: personal.location },
+                  { icon: Code2, label: "Focus", value: "Full-stack systems" },
                 ].map((fact) => (
                   <div key={fact.label} className="border border-border/60 bg-background/60 p-4">
                     <div className="mb-3 flex items-center gap-2">
@@ -63,7 +63,7 @@ export function About() {
                   Age
                 </p>
                 <div>
-                  <p className="font-heading text-8xl font-black leading-none tracking-[-0.05em] text-accent">
+                  <p className="font-heading text-8xl font-black leading-none tracking-tighter text-accent">
                     {personal.age}
                   </p>
                   <p className="mt-3 font-mono text-xs text-muted-foreground">Years old · {personal.birthDate}</p>
@@ -96,14 +96,19 @@ export function About() {
                     {skill.group}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {skill.items.map((item) => (
-                      <span
-                        key={item}
-                        className="border border-border/70 bg-background/70 px-3 py-1.5 font-mono text-[0.72rem] text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground"
-                      >
-                        {item}
-                      </span>
-                    ))}
+                    {skill.items.map((item) => {
+                      const Icon = item.icon
+
+                      return (
+                        <span
+                          key={item.name}
+                          className="inline-flex items-center gap-2 border border-border/70 bg-background/70 px-3 py-1.5 font-mono text-[0.72rem] text-muted-foreground transition-colors hover:border-accent/40 hover:text-foreground"
+                        >
+                          <Icon className="size-3.5" />
+                          {item.name}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
