@@ -1,35 +1,30 @@
 interface SectionHeadingProps {
-    eyebrow: string
-    title: string
-    description?: string
+  eyebrow: string
+  title: string
+  description?: string
 }
 
-export function SectionHeading({
-    eyebrow,
-    title,
-    description,
-}: SectionHeadingProps) {
-    return (
-        <div className="space-y-5">
-            <div className="inline-flex items-center gap-3">
-                <div className="h-px w-12 bg-accent" />
+export function SectionHeading({ eyebrow, title, description }: SectionHeadingProps) {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-5">
+        <span className="font-mono text-xs font-bold uppercase tracking-[0.32em] text-accent">
+          {eyebrow}
+        </span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
 
-                <span className="text-xs uppercase tracking-[0.35em] text-accent font-mono">
-                    {eyebrow}
-                </span>
-            </div>
+      <div className="space-y-4">
+        <h2 className="max-w-3xl font-heading text-4xl font-black leading-tight tracking-[-0.03em] md:text-5xl">
+          {title}
+        </h2>
 
-            <div className="space-y-4">
-                <h2 className="max-w-3xl text-4xl font-black tracking-tight md:text-6xl font-heading">
-                    {title}
-                </h2>
-
-                {description && (
-                    <p className="max-w-2xl text-muted-foreground leading-8 text-base md:text-lg">
-                        {description}
-                    </p>
-                )}
-            </div>
-        </div>
-    )
+        {description && (
+          <p className="max-w-2xl text-base leading-8 text-muted-foreground md:text-lg">
+            {description}
+          </p>
+        )}
+      </div>
+    </div>
+  )
 }

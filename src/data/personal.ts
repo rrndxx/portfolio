@@ -5,26 +5,18 @@ export const personal = {
   email: "rendyllcabardo11@gmail.com",
   location: "Bogo City, Cebu",
   locationShort: "Cebu, PH",
-  availability: "Open to internships, freelance projects, and junior roles",
-  headline: "Designing useful systems with reliable backends and clean interfaces.",
-  bio: "I build scalable systems and polished interfaces, from real-time network monitoring platforms to inventory tools. My strength is turning complex workflows into software that feels clear, fast, and dependable.",
+  age: 22,
+  availability: "Open to junior roles, internships, and freelance projects",
+  headline: "Building reliable systems and polished interfaces.",
+  bio: "BSIT graduate (Magna Cum Laude) from CRMC. I build full-stack systems ranging from real-time network monitors to inventory platforms — with a focus on clean architecture and clear interfaces.",
   bioLong:
-    "I am a BSIT student at Cebu Roosevelt Memorial Colleges with hands-on experience across React, TypeScript, FastAPI, PostgreSQL, Supabase, and Docker. I enjoy the full path from database design and APIs to responsive interfaces, especially for tools that help people work with better visibility and control.",
-  education: "BSIT, 4th Year - CRMC",
+    "I graduated Magna Cum Laude in Bachelor of Science in Information Technology from Cebu Roosevelt Memorial Colleges. I have hands-on experience across React, TypeScript, FastAPI, PostgreSQL, Supabase, and Docker. I enjoy the full path from database design and REST APIs to responsive UIs — especially for tools that help people work with better visibility and control.",
+  education: "BSIT, Magna Cum Laude — CRMC · 2026",
   birthDate: "April 16, 2004",
   socials: [
-    {
-      label: "GitHub",
-      href: "https://github.com/rrndxx",
-    },
-    {
-      label: "LinkedIn",
-      href: "https://www.linkedin.com/in/rendyll/",
-    },
-    {
-      label: "Facebook",
-      href: "https://www.facebook.com/rendyllryan.cabardo",
-    },
+    { label: "GitHub",   href: "https://github.com/rrndxx" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/rendyll/" },
+    { label: "Facebook", href: "https://www.facebook.com/rendyllryan.cabardo" },
   ],
 }
 
@@ -33,27 +25,15 @@ export const navItems = ["Home", "Projects", "About", "Achievements", "Contact"]
 export const roles = [
   "Full-Stack Developer",
   "Frontend Engineer",
-  "FastAPI Builder",
+  "FastAPI Specialist",
   "Systems Thinker",
 ]
 
 export const stats = [
-  {
-    value: "2+",
-    label: "Years building",
-  },
-  {
-    value: "2",
-    label: "Major systems",
-  },
-  {
-    value: "4th",
-    label: "BSIT year",
-  },
-  {
-    value: "24h",
-    label: "Typical reply",
-  },
+  { value: "2+",  label: "Years building"  },
+  { value: "2",   label: "Major projects"  },
+  { value: "MCL", label: "Graduated"       },
+  { value: "24h", label: "Typical reply"   },
 ]
 
 export const skills = [
@@ -77,51 +57,69 @@ export const skills = [
 
 export const achievements = [
   {
-    title: "CCSO 2nd Year Representative",
+    title: "Consistent Dean's List Scholar",
     organization: "CRMC",
-    year: "2023-2024",
-    category: "Leadership",
-  },
-  {
-    title: "CCSO VP Academics",
-    organization: "CRMC",
-    year: "2024-2025",
-    category: "Leadership",
-  },
-  {
-    title: "CCSO 4th Year Representative",
-    organization: "CRMC",
-    year: "2025-2026",
-    category: "Leadership",
-  },
-  {
-    title: "Full-Stack Developer - SAD",
-    organization: "CRMC",
-    year: "2024-2025",
-    category: "Technical",
-  },
-  {
-    title: "Full-Stack Developer - Capstone",
-    organization: "CRMC",
-    year: "2025-2026",
-    category: "Technical",
-  },
-  {
-    title: "Dean's Lister",
-    organization: "CRMC",
-    year: "2023-2026",
+    year: "2022–2026",
     category: "Academic",
   },
   {
-    title: "CESAFI Quiz Bowl - 5th Place",
-    organization: "CESAFI",
-    year: "2024-2025",
+    title: "Magna Cum Laude Graduate",
+    organization: "CRMC",
+    year: "2026",
+    category: "Academic",
+  },
+  {
+    title: "Full-Stack Developer of the Year",
+    organization: "CRMC",
+    year: "2026",
+    category: "Technical",
+  },
+  {
+    title: "Multimedia Wizard Awardee",
+    organization: "CRMC",
+    year: "2026",
+    category: "Technical",
+  },
+  {
+    title: "Best in PC Troubleshooting",
+    organization: "CRMC",
+    year: "2026",
+    category: "Technical",
+  },
+  {
+    title: "Networking Excellence Awardee",
+    organization: "CRMC",
+    year: "2026",
+    category: "Technical",
+  },
+  {
+    title: "2nd Placer — Sci-Math Quiz Bowl",
+    organization: "CRMC",
+    year: "2026",
     category: "Competition",
   },
   {
-    title: "ISITE Quiz Bowl - 5th Place",
-    organization: "ISITE",
-    year: "2024-2025",
+    title: "2nd Placer — Word Warpathon",
+    organization: "CRMC",
+    year: "2026",
     category: "Competition",
+  },
+  {
+    title: "Outstanding Intern as Developer",
+    organization: "CRMC",
+    year: "2026",
+    category: "Professional",
+  },
+  {
+    title: "Leadership Awardee",
+    organization: "CRMC",
+    year: "2026",
+    category: "Leadership",
+  },
+  {
+    title: "CSE-Professional Passer",
+    organization: "Civil Service Commission",
+    year: "2026",
+    category: "Professional",
   },
 ]
